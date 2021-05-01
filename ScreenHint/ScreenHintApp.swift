@@ -8,16 +8,22 @@
 import SwiftUI
 import AppKit
 
+class WindowDraggableImageView: NSImageView{
+    override public func mouseDown(with event: NSEvent) {
+        window?.performDrag(with: event)
+    }
+}
+
 class RectController:  NSWindowController, NSWindowDelegate {
-    // TODO: Get rid of this, derive it from the window's frame
+    // TODO: Get rid of this, derive it from the window's frame if we need it
     var rect: NSRect
     
     init(_ rect: NSRect) {
         self.rect = rect
-        let window = NSWindow(contentRect: rect, styleMask: .resizable, backing: .buffered, defer: false)
+        let window = NSWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
         window.isOpaque = false
         window.level = .screenSaver
-        window.backgroundColor = NSColor.blue
+        window.backgroundColor = NSColor.clear
         window.alphaValue = 0.2
         window.ignoresMouseEvents = false
         window.isMovableByWindowBackground = true
@@ -37,15 +43,13 @@ class RectController:  NSWindowController, NSWindowDelegate {
         let screenHeight = NSScreen.main!.frame.height
         let rect = NSRect(x: self.rect.minX, y: screenHeight - self.rect.minY - self.rect.height, width: self.rect.width, height: self.rect.height)
         
+        // Hide the window before taking the screenshot
         let screenshot = CGWindowListCreateImage(rect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
         let image = NSImage(cgImage:screenshot, size: .zero)
-        let imageView = NSImageView.init()
+        let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
         imageView.image = image
-        // TODO: if I replace the content view, dragging and resizing breaks
-        // if I append, the image doesn't show up. 
-        self.window?.contentView = imageView
         self.window?.alphaValue = 1.0
-        self.window?.update()
+        self.window?.contentView?.addSubview(imageView)
     }
     
     required init?(coder: NSCoder) {
@@ -78,13 +82,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { _ in
             self.mouseLocation = NSEvent.mouseLocation
             self.dragStart = NSEvent.mouseLocation
-//            print ("[DN  ] Global location is \(self.mouseLocation)")
-            
         }
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { _ in
             self.mouseLocation = NSEvent.mouseLocation
             self.dragEnd = NSEvent.mouseLocation
-//            print ("[UP  ] Global location is \(self.mouseLocation)")
             
             let rect = getRectForPoints(self.dragStart, self.dragEnd);
             if (self.activeRect != nil) {
@@ -106,9 +107,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 self.activeRect!.showWindow(nil)
             }
             self.activeRect!.setRect(rect)
-
-//            print ("[DRAG] Global location is \(self.mouseLocation)")
-            
         }
         
         let contentView = ContentView().environmentObject(self)
