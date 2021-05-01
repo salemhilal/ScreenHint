@@ -40,8 +40,13 @@ class RectController:  NSWindowController, NSWindowDelegate {
     func finishDragging() {
         // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
         // https://stackoverflow.com/a/12438416/444912
+        // This new rect
         let screenHeight = NSScreen.main!.frame.height
-        let rect = NSRect(x: self.rect.minX, y: screenHeight - self.rect.minY - self.rect.height, width: self.rect.width, height: self.rect.height)
+        let rect = NSRect(
+            x: self.rect.minX,
+            y: screenHeight - self.rect.minY - self.rect.height,
+            width: self.rect.width,
+            height: self.rect.height)
         
         // Hide the window before taking the screenshot
         let screenshot = CGWindowListCreateImage(rect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
@@ -76,9 +81,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var dragEnd: NSPoint = NSPoint.init(x: 0, y: 0)
     var activeRect: RectController?
     @Published var rects: [RectController] = []
-        
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-
+        
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { _ in
             self.mouseLocation = NSEvent.mouseLocation
             self.dragStart = NSEvent.mouseLocation
@@ -92,12 +97,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 self.activeRect!.setRect(rect)
                 self.activeRect!.finishDragging()
                 self.rects.append(self.activeRect!)
-
+                
             }
             self.activeRect = nil
-            print("  ==  Added rect: \(rect)")
-            let windowCount = NSApplication.shared.windows.count
-            print("  == Window count: \(windowCount)")
         }
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { _ in
             self.mouseLocation = NSEvent.mouseLocation
