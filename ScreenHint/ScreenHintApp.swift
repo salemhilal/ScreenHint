@@ -9,6 +9,7 @@ import SwiftUI
 import AppKit
 
 class RectController:  NSWindowController, NSWindowDelegate {
+    // TODO: Get rid of this, derive it from the window's frame
     var rect: NSRect
     
     init(_ rect: NSRect) {
@@ -26,11 +27,25 @@ class RectController:  NSWindowController, NSWindowDelegate {
     }
     
     func setRect(_ rect: NSRect) {
+        self.rect = rect
         self.window?.setFrame(rect, display: true)
     }
     
     func finishDragging() {
+        // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
+        // https://stackoverflow.com/a/12438416/444912
+        let screenHeight = NSScreen.main!.frame.height
+        let rect = NSRect(x: self.rect.minX, y: screenHeight - self.rect.minY - self.rect.height, width: self.rect.width, height: self.rect.height)
+        
+        let screenshot = CGWindowListCreateImage(rect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
+        let image = NSImage(cgImage:screenshot, size: .zero)
+        let imageView = NSImageView.init()
+        imageView.image = image
+        // TODO: if I replace the content view, dragging and resizing breaks
+        // if I append, the image doesn't show up. 
+        self.window?.contentView = imageView
         self.window?.alphaValue = 1.0
+        self.window?.update()
     }
     
     required init?(coder: NSCoder) {
@@ -47,7 +62,7 @@ func getRectForPoints(_ first: NSPoint, _ second: NSPoint) -> NSRect {
     return NSRect.init(x:x, y:y, width:width, height:height)
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     
     var popover: NSPopover!
     var statusBarItem: NSStatusItem!
@@ -56,20 +71,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
     var dragEnd: NSPoint = NSPoint.init(x: 0, y: 0)
     var activeRect: RectController?
-    var rects: [RectController] = []
+    @Published var rects: [RectController] = []
         
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { _ in
             self.mouseLocation = NSEvent.mouseLocation
             self.dragStart = NSEvent.mouseLocation
-            print ("[DN  ] Global location is \(self.mouseLocation)")
+//            print ("[DN  ] Global location is \(self.mouseLocation)")
             
         }
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { _ in
             self.mouseLocation = NSEvent.mouseLocation
             self.dragEnd = NSEvent.mouseLocation
-            print ("[UP  ] Global location is \(self.mouseLocation)")
+//            print ("[UP  ] Global location is \(self.mouseLocation)")
             
             let rect = getRectForPoints(self.dragStart, self.dragEnd);
             if (self.activeRect != nil) {
@@ -80,6 +95,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             self.activeRect = nil
             print("  ==  Added rect: \(rect)")
+            let windowCount = NSApplication.shared.windows.count
+            print("  == Window count: \(windowCount)")
         }
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { _ in
             self.mouseLocation = NSEvent.mouseLocation
@@ -90,28 +107,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             self.activeRect!.setRect(rect)
 
-            print ("[DRAG] Global location is \(self.mouseLocation)")
+//            print ("[DRAG] Global location is \(self.mouseLocation)")
+            
         }
-
-//        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { _ in
-//            self.isDragging = true
-//            print ("Global location is \(self.mouseLocation)")
-//        }
-//        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { _ in
-//            self.isDragging = false
-//            print ("Global location is \(self.mouseLocation)")
-//        }
-
-
         
-        
-        let contentView = ContentView()
-        
+        let contentView = ContentView().environmentObject(self)
         let popover = NSPopover()
         popover.contentSize = NSSize(width: 400, height: 500)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: contentView)
-//        popover.delegate = contentView
         self.popover = popover
         
         self.statusBarItem = NSStatusBar.system.statusItem(withLength: CGFloat(NSStatusItem.variableLength))
@@ -121,6 +125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(togglePopover(_:))
         }
     }
+    
     
     @objc func togglePopover(_ sender: AnyObject?) {
         if let button = self.statusBarItem.button {
