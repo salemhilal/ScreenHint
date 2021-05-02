@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AppKit
+import HotKey
 
 class WindowDraggableImageView: NSImageView{
     override public func mouseDown(with event: NSEvent) {
@@ -22,12 +23,13 @@ class RectController:  NSWindowController, NSWindowDelegate {
         self.rect = rect
         let window = NSWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
         window.isOpaque = false
-        window.level = .screenSaver
-        window.backgroundColor = NSColor.clear
+        window.level = .floating
+        window.backgroundColor = NSColor.blue
         window.alphaValue = 0.2
         window.ignoresMouseEvents = false
         window.isMovableByWindowBackground = true
         window.isMovable = true
+        window.hasShadow = true
         super.init(window: window)
         window.delegate = self
     }
@@ -48,13 +50,20 @@ class RectController:  NSWindowController, NSWindowDelegate {
             width: self.rect.width,
             height: self.rect.height)
         
-        // Hide the window before taking the screenshot
-        let screenshot = CGWindowListCreateImage(rect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
-        let image = NSImage(cgImage:screenshot, size: .zero)
-        let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
-        imageView.image = image
-        self.window?.alphaValue = 1.0
-        self.window?.contentView?.addSubview(imageView)
+        // Todo: Hide the window before taking the screenshot
+        self.window?.alphaValue = 0.0
+        self.window?.backgroundColor = NSColor.clear
+        self.window?.display()
+        DispatchQueue.main.async {
+            let screenshot = CGWindowListCreateImage(rect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
+            let image = NSImage(cgImage:screenshot, size: .zero)
+            let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
+            imageView.image = image
+            self.window?.alphaValue = 1.0
+            self.window?.isOpaque = true
+            self.window?.contentView?.addSubview(imageView)
+
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -80,6 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
     var dragEnd: NSPoint = NSPoint.init(x: 0, y: 0)
     var activeRect: RectController?
+    var hotKey: HotKey?
     @Published var rects: [RectController] = []
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -110,6 +120,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
             self.activeRect!.setRect(rect)
         }
+        
+        let hotKey = HotKey(key: .six, modifiers: [.command, .option])
+        hotKey.keyDownHandler = {
+            print("Got hotkey at \(Date())")
+        }
+        
+        self.hotKey = hotKey
+
         
         let contentView = ContentView().environmentObject(self)
         let popover = NSPopover()
