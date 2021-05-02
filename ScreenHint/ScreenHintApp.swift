@@ -55,6 +55,10 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
 class RectController:  NSWindowController, NSWindowDelegate {
     
     init(_ rect: NSRect) {
+        // TODO: the image in the window isn't stretching to fit
+        // TODO: the window isn't sticking to its initial aspect ratio
+        // TODO: when the window's origin changes (i.e. when dragging from top-right
+        //       to bottom-left), the window jitters sliglty.
         let window = HintWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
         window.isOpaque = false
         window.level = .floating
@@ -149,8 +153,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         hotKey.keyDownHandler = {
             print("Got hotkey at \(Date())")
             // TODO : show a secret window on every monitor
-            // TODO : capture mouse events and keep them from propagating 
-//            self.wc.showWindow(nil)
+            // TODO : capture mouse events and keep them from propagating
+            self.wc.showWindow(nil)
             self.setupMonitors()
             
         }
@@ -191,10 +195,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
      point, they are removed.
      */
     func setupMonitors() {
-        self.mouseDownMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { _ in
+        self.mouseDownMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { event in
             self.dragStart = NSEvent.mouseLocation
+            return event
         }
-        self.mouseUpMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { _ in
+        self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
             
             let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
             if (self.activeRect != nil) {
@@ -220,14 +225,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 NSEvent.removeMonitor(self.mouseDragMonitor!)
                 self.mouseDragMonitor = nil
             }
+            return event
         }
-        self.mouseDragMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { _ in
+        self.mouseDragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
             let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
             if (self.activeRect == nil) {
                 self.activeRect = RectController(rect);
                 self.activeRect!.showWindow(nil)
             }
             self.activeRect!.setRect(rect)
+            return event
         }
 
     }
