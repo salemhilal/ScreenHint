@@ -10,7 +10,7 @@ import AppKit
 import HotKey
 
 /**
-This is an image view that passes drag events up to its parent window.
+ This is an image view that passes drag events up to its parent window.
  */
 class WindowDraggableImageView: NSImageView{
     override public func mouseDown(with event: NSEvent) {
@@ -29,15 +29,32 @@ class HintWindow: NSWindow {
         }
         super.mouseUp(with: event)
     }
+    
+}
 
+class SecretWindowController: NSWindowController, NSWindowDelegate {
+    init() {
+        let secretWindow = NSWindow(contentRect: NSScreen.main!.frame, styleMask: .borderless, backing: .buffered, defer: false)
+        secretWindow.backgroundColor = NSColor.blue
+        secretWindow.isOpaque = false
+        secretWindow.alphaValue = 0.2
+        secretWindow.level = .floating
+        secretWindow.ignoresMouseEvents = false
+        secretWindow.isMovable = false
+        
+        super.init(window: secretWindow)
+        secretWindow.delegate = self
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 class RectController:  NSWindowController, NSWindowDelegate {
-    // TODO: Get rid of this, derive it from the window's frame if we need it
-    var rect: NSRect
     
     init(_ rect: NSRect) {
-        self.rect = rect
         let window = HintWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
         window.isOpaque = false
         window.level = .floating
@@ -47,12 +64,15 @@ class RectController:  NSWindowController, NSWindowDelegate {
         window.isMovableByWindowBackground = true
         window.isMovable = true
         window.hasShadow = true
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.borderWidth = 1
+        window.contentView?.layer?.borderColor = CGColor.black
+        
         super.init(window: window)
         window.delegate = self
     }
     
     func setRect(_ rect: NSRect) {
-        self.rect = rect
         self.window?.setFrame(rect, display: true)
     }
     
@@ -60,28 +80,32 @@ class RectController:  NSWindowController, NSWindowDelegate {
         // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
         // but that's not true for the rect passed to CGWindowListCreateImage
         // https://stackoverflow.com/a/12438416/444912
+        guard let window = self.window else {
+            return;
+        }
         let screenHeight = NSScreen.main!.frame.height
-        let rect = NSRect(
-            x: self.rect.minX,
-            y: screenHeight - self.rect.minY - self.rect.height,
-            width: self.rect.width,
-            height: self.rect.height)
+        let windowRect = window.frame;
+        let screenshotRect = NSRect(
+            x: windowRect.minX,
+            y: screenHeight - windowRect.minY - windowRect.height,
+            width: windowRect.width,
+            height: windowRect.height)
         
-        self.window?.alphaValue = 0.0
-        self.window?.backgroundColor = NSColor.clear
-        self.window?.display()
+        window.alphaValue = 0.0
+        window.backgroundColor = NSColor.clear
+        window.display()
         
         // Wait a split second for the window's blue background to be removed
         // before taking the screenshot
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let screenshot = CGWindowListCreateImage(rect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
+            let screenshot = CGWindowListCreateImage(screenshotRect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
             let image = NSImage(cgImage:screenshot, size: .zero)
             let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
             imageView.image = image
             self.window?.alphaValue = 1.0
             self.window?.isOpaque = true
             self.window?.contentView?.addSubview(imageView)
-
+            
         }
     }
     
@@ -101,52 +125,37 @@ func getRectForPoints(_ first: NSPoint, _ second: NSPoint) -> NSRect {
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     
+    // Views
     var popover: NSPopover!
     var statusBarItem: NSStatusItem!
-    var mouseLocation: NSPoint = NSPoint.init(x: 0, y: 0)
-    var isDragging = false
+    var wc: SecretWindowController!
+    
+    // Mouse drag state
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
-    var dragEnd: NSPoint = NSPoint.init(x: 0, y: 0)
     var activeRect: RectController?
     var hotKey: HotKey?
+    
+    // Mouse event monitors
+    var mouseDownMonitor: Any?
+    var mouseUpMonitor: Any?
+    var mouseDragMonitor: Any?
+    
     @Published var rects: [RectController] = []
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
-        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { _ in
-            self.mouseLocation = NSEvent.mouseLocation
-            self.dragStart = NSEvent.mouseLocation
-        }
-        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { _ in
-            self.mouseLocation = NSEvent.mouseLocation
-            self.dragEnd = NSEvent.mouseLocation
-            
-            let rect = getRectForPoints(self.dragStart, self.dragEnd);
-            if (self.activeRect != nil) {
-                self.activeRect!.setRect(rect)
-                self.activeRect!.finishDragging()
-                self.rects.append(self.activeRect!)
-                
-            }
-            self.activeRect = nil
-        }
-        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { _ in
-            self.mouseLocation = NSEvent.mouseLocation
-            let rect = getRectForPoints(self.dragStart, self.mouseLocation);
-            if (self.activeRect == nil) {
-                self.activeRect = RectController(rect);
-                self.activeRect!.showWindow(nil)
-            }
-            self.activeRect!.setRect(rect)
-        }
+        self.wc = SecretWindowController()
         
         let hotKey = HotKey(key: .six, modifiers: [.command, .option])
         hotKey.keyDownHandler = {
             print("Got hotkey at \(Date())")
+            // TODO : show a secret window on every monitor
+            // TODO : capture mouse events and keep them from propagating 
+//            self.wc.showWindow(nil)
+            self.setupMonitors()
+            
         }
-        
         self.hotKey = hotKey
-
+        
         
         let contentView = ContentView().environmentObject(self)
         let popover = NSPopover()
@@ -163,7 +172,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
     
-    
+    /**
+     Displays or hides the status bar popover.
+     */
     @objc func togglePopover(_ sender: AnyObject?) {
         if let button = self.statusBarItem.button {
             if self.popover.isShown {
@@ -173,6 +184,52 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 self.popover.contentViewController?.view.window?.becomeKey()
             }
         }
+    }
+    
+    /**
+     Set up listeners for mouse events. They're used to record the next drag gesture, after which
+     point, they are removed.
+     */
+    func setupMonitors() {
+        self.mouseDownMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { _ in
+            self.dragStart = NSEvent.mouseLocation
+        }
+        self.mouseUpMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { _ in
+            
+            let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
+            if (self.activeRect != nil) {
+                self.activeRect!.setRect(rect)
+                self.activeRect!.finishDragging()
+                self.rects.append(self.activeRect!)
+                
+            }
+            self.activeRect = nil
+            self.wc.close()
+            
+            // Release monitors, making sure not to double-release them
+            // (since apparently that's bad)
+            if (self.mouseDownMonitor != nil) {
+                NSEvent.removeMonitor(self.mouseDownMonitor!)
+                self.mouseDownMonitor = nil
+            }
+            if (self.mouseUpMonitor != nil) {
+                NSEvent.removeMonitor(self.mouseUpMonitor!)
+                self.mouseUpMonitor = nil
+            }
+            if (self.mouseDragMonitor != nil) {
+                NSEvent.removeMonitor(self.mouseDragMonitor!)
+                self.mouseDragMonitor = nil
+            }
+        }
+        self.mouseDragMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged]) { _ in
+            let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
+            if (self.activeRect == nil) {
+                self.activeRect = RectController(rect);
+                self.activeRect!.showWindow(nil)
+            }
+            self.activeRect!.setRect(rect)
+        }
+
     }
     
 }
