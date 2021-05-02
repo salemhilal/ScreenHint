@@ -55,8 +55,6 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
 class RectController:  NSWindowController, NSWindowDelegate {
     
     init(_ rect: NSRect) {
-        // TODO: the image in the window isn't stretching to fit
-        // TODO: the window isn't sticking to its initial aspect ratio
         // TODO: when the window's origin changes (i.e. when dragging from top-right
         //       to bottom-left), the window jitters sliglty.
         let window = HintWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
@@ -95,17 +93,26 @@ class RectController:  NSWindowController, NSWindowDelegate {
             width: windowRect.width,
             height: windowRect.height)
         
+        // Make sure the window keeps its aspect ratio when resizing
+        window.aspectRatio = window.frame.size
         window.alphaValue = 0.0
         window.backgroundColor = NSColor.clear
         window.display()
         
-        // Wait a split second for the window's blue background to be removed
+        // Wait a split second for the hint's blue background to be removed
         // before taking the screenshot
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let screenshot = CGWindowListCreateImage(screenshotRect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
+            let screenshot = CGWindowListCreateImage(screenshotRect,
+                                                     CGWindowListOption.optionAll,
+                                                     kCGNullWindowID,
+                                                     CGWindowImageOption.bestResolution)!
+            
             let image = NSImage(cgImage:screenshot, size: .zero)
             let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
             imageView.image = image
+            // Make sure the image fills the iwndow
+            imageView.autoresizingMask = [.height, .width]
+            
             self.window?.alphaValue = 1.0
             self.window?.isOpaque = true
             self.window?.contentView?.addSubview(imageView)
