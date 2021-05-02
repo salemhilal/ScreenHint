@@ -32,9 +32,13 @@ class HintWindow: NSWindow {
     
 }
 
+/**
+ This is a hidden window that we display on every screen when the global shortcut is pressed.
+ It captures mouse events so that you don't highlight or drag stuff when making a hint.
+ */
 class SecretWindowController: NSWindowController, NSWindowDelegate {
-    init() {
-        let secretWindow = NSWindow(contentRect: NSScreen.main!.frame, styleMask: .borderless, backing: .buffered, defer: false)
+    init(_ screen: NSScreen) {
+        let secretWindow = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
         secretWindow.backgroundColor = NSColor.blue
         secretWindow.isOpaque = false
         secretWindow.alphaValue = 0.2
@@ -44,7 +48,7 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
         
         super.init(window: secretWindow)
         secretWindow.delegate = self
-
+        
     }
     
     required init?(coder: NSCoder) {
@@ -139,7 +143,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     // Views
     var popover: NSPopover!
     var statusBarItem: NSStatusItem!
-    var wc: SecretWindowController!
+    var swcs: [SecretWindowController] = []
     
     // Mouse drag state
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
@@ -154,14 +158,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var rects: [RectController] = []
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        self.wc = SecretWindowController()
+        NSScreen.screens.forEach { screen in
+            // make a secret window for each screen
+            self.swcs.append(SecretWindowController(screen))
+        }
         
         let hotKey = HotKey(key: .six, modifiers: [.command, .option])
         hotKey.keyDownHandler = {
             print("Got hotkey at \(Date())")
             // TODO : show a secret window on every monitor
             // TODO : capture mouse events and keep them from propagating
-            self.wc.showWindow(nil)
+            self.swcs.forEach({ $0.showWindow(nil); })
             self.setupMonitors()
             
         }
@@ -216,7 +223,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 
             }
             self.activeRect = nil
-            self.wc.close()
+            self.swcs.forEach({$0.close()})
             
             // Release monitors, making sure not to double-release them
             // (since apparently that's bad)
@@ -243,7 +250,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             self.activeRect!.setRect(rect)
             return event
         }
-
+        
     }
     
 }
