@@ -9,10 +9,27 @@ import SwiftUI
 import AppKit
 import HotKey
 
+/**
+This is an image view that passes drag events up to its parent window.
+ */
 class WindowDraggableImageView: NSImageView{
     override public func mouseDown(with event: NSEvent) {
         window?.performDrag(with: event)
     }
+}
+
+/**
+ This is a window that closes when you doubleclick it.
+ */
+class HintWindow: NSWindow {
+    override func mouseUp(with event: NSEvent) {
+        // If this window is double-clicked (anywhere), close it.
+        if event.clickCount >= 2 {
+            self.close()
+        }
+        super.mouseUp(with: event)
+    }
+
 }
 
 class RectController:  NSWindowController, NSWindowDelegate {
@@ -21,7 +38,7 @@ class RectController:  NSWindowController, NSWindowDelegate {
     
     init(_ rect: NSRect) {
         self.rect = rect
-        let window = NSWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
+        let window = HintWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
         window.isOpaque = false
         window.level = .floating
         window.backgroundColor = NSColor.blue
@@ -41,8 +58,8 @@ class RectController:  NSWindowController, NSWindowDelegate {
     
     func finishDragging() {
         // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
+        // but that's not true for the rect passed to CGWindowListCreateImage
         // https://stackoverflow.com/a/12438416/444912
-        // This new rect
         let screenHeight = NSScreen.main!.frame.height
         let rect = NSRect(
             x: self.rect.minX,
@@ -50,11 +67,13 @@ class RectController:  NSWindowController, NSWindowDelegate {
             width: self.rect.width,
             height: self.rect.height)
         
-        // Todo: Hide the window before taking the screenshot
         self.window?.alphaValue = 0.0
         self.window?.backgroundColor = NSColor.clear
         self.window?.display()
-        DispatchQueue.main.async {
+        
+        // Wait a split second for the window's blue background to be removed
+        // before taking the screenshot
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let screenshot = CGWindowListCreateImage(rect, CGWindowListOption.optionAll, kCGNullWindowID, CGWindowImageOption.bestResolution)!
             let image = NSImage(cgImage:screenshot, size: .zero)
             let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
