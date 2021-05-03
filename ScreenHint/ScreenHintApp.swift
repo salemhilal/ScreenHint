@@ -158,36 +158,57 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var rects: [RectController] = []
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        // make a secret window for each screen. These will
+        // capture mouse events for us when making a new hint.
         NSScreen.screens.forEach { screen in
-            // make a secret window for each screen
             self.swcs.append(SecretWindowController(screen))
         }
         
+        // Global hotkey (hardcoded to cmd + opt + 6 for now)
+        // TODO: Make this modifiable
         let hotKey = HotKey(key: .six, modifiers: [.command, .option])
         hotKey.keyDownHandler = {
-            print("Got hotkey at \(Date())")
-            // TODO : show a secret window on every monitor
-            // TODO : capture mouse events and keep them from propagating
-            self.swcs.forEach({ $0.showWindow(nil); })
-            self.setupMonitors()
-            
+            self.captureHint(nil)
         }
         self.hotKey = hotKey
         
-        
-        let contentView = ContentView().environmentObject(self)
-        let popover = NSPopover()
-        popover.contentSize = NSSize(width: 400, height: 500)
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: contentView)
-        self.popover = popover
-        
-        self.statusBarItem = NSStatusBar.system.statusItem(withLength: CGFloat(NSStatusItem.variableLength))
+        // Set up the status bar menu
+        let menu = NSMenu()
+        menu.addItem(withTitle: "ScreenHint v1.0", action: nil, keyEquivalent: "")
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(
+            withTitle: "New Hint",
+            action: #selector(captureHint(_:)),
+            keyEquivalent: ""
+        )
+        menu.addItem(
+            withTitle: "Clear All Hints",
+            action: #selector(clearHints(_:)),
+            keyEquivalent: ""
+        )
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(
+            withTitle: "About...",
+            action: #selector(doMenuItem(_:)),
+            keyEquivalent: ""
+        )
+        menu.addItem(
+            withTitle: "Quit",
+            action: #selector(gameOver(_:)),
+            keyEquivalent: ""
+        )
+
+        self.statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        self.statusBarItem.menu = menu
         
         if let button = self.statusBarItem.button {
             button.image = NSImage(named: "Icon")
-            button.action = #selector(togglePopover(_:))
         }
+    }
+    
+    @objc func doMenuItem(_ sender: AnyObject?) {
+        print("HEYOOO")
     }
     
     /**
@@ -205,8 +226,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     /**
-     Set up listeners for mouse events. They're used to record the next drag gesture, after which
-     point, they are removed.
+     Enter the "capture hint" mode. In this mode, we show a tinted NSWindow over every screen, and we watch for a drag gesture. The gesture marks the bounds of a rectangle which we use to make a hint. Once the gesture is done, the event monitors tear themselves down.
+     */
+    @objc func captureHint(_ sender: AnyObject?) {
+        self.swcs.forEach({ $0.showWindow(nil); })
+        self.setupMonitors()
+    }
+    
+    /**
+     Quits the app (used for the menu bar)
+     */
+    @objc func gameOver(_ sender: AnyObject?) {
+        NSApp.terminate(nil);
+    }
+    
+    /**
+     Closes all hints.
+     */
+    @objc func clearHints(_ sender: AnyObject?) {
+        self.rects.forEach({(rect) in
+            rect.window?.close()
+        })
+    }
+    
+    /**
+     Set up listeners for mouse events. They're used to record the next drag gesture. Once the gesture is recorded, the monitors are removed to keep from intercepting gestures on hints as well.
      */
     func setupMonitors() {
         self.mouseDownMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { event in
@@ -242,6 +286,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             return event
         }
         self.mouseDragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
+            // TODO: Because we use .floating for everything, the nav bar can't
+            // be screenshot (since the rect we are drawng can't be put in front of the menu bar).
+            // We either have to somehow include the menu bar _or_ factor that in when calculating
+            // this rect.
+            let menuBarHeigth = NSApplication.shared.mainMenu?.menuBarHeight ?? 0
             let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
             if (self.activeRect == nil) {
                 self.activeRect = RectController(rect);

@@ -9,29 +9,41 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var appDelegate: AppDelegate
-
+    
     var body: some View {
-        Text("Hello, world!")
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        Button("Clear hints") {
-            appDelegate.rects.forEach({(rect) in
-                rect.window?.close()
+        VStack (alignment:.leading) {
+            Button("Clear hints") {
+                appDelegate.rects.forEach({(rect) in
+                    rect.window?.close()
+                })
+            }
+                .frame(maxWidth: .infinity)
+            Button("Quit") {
+                NSApp.terminate(nil);
+            }
+                .frame(maxWidth: .infinity)
+            Button(action: {
+                NSApp.terminate(nil);
+            }, label: {
+                Text("Quit 2")
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
             })
+            
+            MenuButton("Menu") {
+                Button("Hey") {
+                    print("heyoo")
+                }
+            }
+            
         }
-            .padding()
-            .frame(maxWidth: .infinity)
-        Button("Quit") {
-            NSApp.terminate(nil);
-        }
-            .padding()
-            .frame(maxWidth: .infinity)
-
+        
     }
 }
 
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ContentView()
-//    }
-//}
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+            .previewLayout(PreviewLayout.fixed(width: 200, height: 500))
+    }
+}
