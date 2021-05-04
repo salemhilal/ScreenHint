@@ -36,6 +36,9 @@ class AboutWindowController: NSWindowController, NSWindowDelegate {
     init() {
         let width: CGFloat = 324;
         let height: CGFloat = 200;
+        // Unlike in other places, we actually mean the main screen.
+        // This window is going to show up wherever the keyboard is focused to,
+        // so we want it to render in the center of that.
         let screenFrame = NSScreen.main!.frame;
         
         let aboutRect = NSRect(
@@ -111,14 +114,7 @@ class RectController:  NSWindowController, NSWindowDelegate {
     func setRect(_ rect: NSRect) {
         self.window?.setFrame(rect, display: true, animate: false)
     }
-    
-    func findScreenForPoint(point: NSPoint) -> NSScreen {
-        let screens = NSScreen.screens
-        let screenWithMouse = (screens.first { NSMouseInRect(point, $0.frame, false) })
-        return screenWithMouse ?? NSScreen.main!
-    }
-
-    
+        
     func finishDragging() {
         // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
         // but that's not true for the rect passed to CGWindowListCreateImage
@@ -129,19 +125,15 @@ class RectController:  NSWindowController, NSWindowDelegate {
         
         // omg this was so dumb but the main screen is NOT the first screen.
         // the coordinates are all relative to the _first_ screen. jesus f christ lol
+        // TODO: this, in its own function, with tests.
         let screen = NSScreen.screens[0];
-        print("finished window frame \(window.frame)")
-        print("New screen dimensions: \(screen.frame.size)")
-        // TODO: this might not be the right thing to do on an external monitor
         let screenHeight = screen.frame.height
         let windowRect = window.frame;
         let screenshotRect = NSRect(
             x: windowRect.minX,
-//            y: (NSScreen.main!.frame.maxY) - windowRect.maxY,
             y: screenHeight - windowRect.minY - windowRect.height,
             width: windowRect.width,
             height: windowRect.height)
-        print("finished screen frame \(screenshotRect)")
 
         
         // Make sure the window keeps its aspect ratio when resizing
@@ -153,8 +145,6 @@ class RectController:  NSWindowController, NSWindowDelegate {
         // before taking the screenshot
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let screenshot = CGWindowListCreateImage(screenshotRect,
-//            let screenshot = CGWindowListCreateImage(CGRect.infinite,
-
                                                      CGWindowListOption.optionAll,
                                                      kCGNullWindowID,
                                                      CGWindowImageOption.bestResolution)!
@@ -179,18 +169,10 @@ class RectController:  NSWindowController, NSWindowDelegate {
 }
 
 func getRectForPoints(_ first: NSPoint, _ second: NSPoint) -> NSRect {
-    print("        first:  \(first)")
-    print("        second: \(second)")
-
     let x = min(first.x, second.x)
     let y = min(first.y, second.y)
     let width = abs(first.x - second.x)
     let height = abs(first.y - second.y)
-    print("        x: \(x)")
-    print("        y: \(y)")
-    print("        w: \(width)")
-    print("        h: \(height)")
-
     
     return NSRect.init(x:x, y:y, width:width, height:height)
 }
@@ -265,11 +247,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             button.image = NSImage(named: "Icon")
         }
     }
-    
-    @objc func doMenuItem(_ sender: AnyObject?) {
-        print("HEYOOO")
-    }
-        
+            
     /**
      Enter the "capture hint" mode. In this mode, we show a tinted NSWindow over every screen, and we watch for a drag gesture. The gesture marks the bounds of a rectangle which we use to make a hint. Once the gesture is done, the event monitors tear themselves down.
      */
@@ -313,7 +291,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
             
             let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-            print("Mouse: \(NSEvent.mouseLocation)")
             if (self.activeRect != nil) {
                 self.activeRect!.setRect(rect)
                 self.activeRect!.finishDragging()
@@ -353,20 +330,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             
             let windowRect = rect;
             
-            let screenshotRect = NSRect(
-                x: windowRect.minX,
-                y: NSScreen.main!.frame.maxY - windowRect.maxY,
-                width: windowRect.width,
-                height: windowRect.height)
-
-            
-            
-            print("R: \(rect)")
-            print("S: \(screenshotRect)")
-            print("       Y CALC: \(NSScreen.main!.frame.maxY) - \(windowRect.maxY) = \(NSScreen.main!.frame.maxY)")
-            print("       MAIN SCREEN: \(NSScreen.main!)")
-            print("")
-
             return event
         }
         
