@@ -32,6 +32,36 @@ class HintWindow: NSWindow {
     
 }
 
+class AboutWindowController: NSWindowController, NSWindowDelegate {
+    init() {
+        let width: CGFloat = 324;
+        let height: CGFloat = 200;
+        let screenFrame = NSScreen.main!.frame;
+        
+        let aboutRect = NSRect(
+            x: screenFrame.width / 2 - (width / 2),
+            y: screenFrame.height / 2 - (height / 2),
+            width: width,
+            height: height
+        )
+        let window = NSWindow(contentRect: aboutRect, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        window.level = .floating
+        window.isMovable = true
+        
+        let contentView = AboutView()
+        let view = NSHostingView(rootView: contentView)
+        view.frame = NSRect(x: 0, y: 0, width: width, height: height);
+        window.contentView?.addSubview(view)
+        
+        super.init(window: window)
+        window.delegate = self
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 /**
  This is a hidden window that we display on every screen when the global shortcut is pressed.
  It captures mouse events so that you don't highlight or drag stuff when making a hint.
@@ -42,7 +72,7 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
         secretWindow.backgroundColor = NSColor.blue
         secretWindow.isOpaque = false
         secretWindow.alphaValue = 0.2
-        secretWindow.level = .floating
+        secretWindow.level = .screenSaver
         secretWindow.ignoresMouseEvents = false
         secretWindow.isMovable = false
         
@@ -63,7 +93,7 @@ class RectController:  NSWindowController, NSWindowDelegate {
         //       to bottom-left), the window jitters sliglty.
         let window = HintWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
         window.isOpaque = false
-        window.level = .floating
+        window.level = .screenSaver
         window.backgroundColor = NSColor.blue
         window.alphaValue = 0.2
         window.ignoresMouseEvents = false
@@ -79,8 +109,15 @@ class RectController:  NSWindowController, NSWindowDelegate {
     }
     
     func setRect(_ rect: NSRect) {
-        self.window?.setFrame(rect, display: true)
+        self.window?.setFrame(rect, display: true, animate: false)
     }
+    
+    func findScreenForPoint(point: NSPoint) -> NSScreen {
+        let screens = NSScreen.screens
+        let screenWithMouse = (screens.first { NSMouseInRect(point, $0.frame, false) })
+        return screenWithMouse ?? NSScreen.main!
+    }
+
     
     func finishDragging() {
         // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
@@ -89,24 +126,35 @@ class RectController:  NSWindowController, NSWindowDelegate {
         guard let window = self.window else {
             return;
         }
-        let screenHeight = NSScreen.main!.frame.height
+        
+        // omg this was so dumb but the main screen is NOT the first screen.
+        // the coordinates are all relative to the _first_ screen. jesus f christ lol
+        let screen = NSScreen.screens[0];
+        print("finished window frame \(window.frame)")
+        print("New screen dimensions: \(screen.frame.size)")
+        // TODO: this might not be the right thing to do on an external monitor
+        let screenHeight = screen.frame.height
         let windowRect = window.frame;
         let screenshotRect = NSRect(
             x: windowRect.minX,
+//            y: (NSScreen.main!.frame.maxY) - windowRect.maxY,
             y: screenHeight - windowRect.minY - windowRect.height,
             width: windowRect.width,
             height: windowRect.height)
+        print("finished screen frame \(screenshotRect)")
+
         
         // Make sure the window keeps its aspect ratio when resizing
         window.aspectRatio = window.frame.size
         window.alphaValue = 0.0
         window.backgroundColor = NSColor.clear
-        window.display()
         
         // Wait a split second for the hint's blue background to be removed
         // before taking the screenshot
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let screenshot = CGWindowListCreateImage(screenshotRect,
+//            let screenshot = CGWindowListCreateImage(CGRect.infinite,
+
                                                      CGWindowListOption.optionAll,
                                                      kCGNullWindowID,
                                                      CGWindowImageOption.bestResolution)!
@@ -114,10 +162,11 @@ class RectController:  NSWindowController, NSWindowDelegate {
             let image = NSImage(cgImage:screenshot, size: .zero)
             let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
             imageView.image = image
-            // Make sure the image fills the iwndow
+            // Make sure the image fills the window
             imageView.autoresizingMask = [.height, .width]
             
             self.window?.alphaValue = 1.0
+            self.window?.level = .floating
             self.window?.isOpaque = true
             self.window?.contentView?.addSubview(imageView)
             
@@ -130,20 +179,29 @@ class RectController:  NSWindowController, NSWindowDelegate {
 }
 
 func getRectForPoints(_ first: NSPoint, _ second: NSPoint) -> NSRect {
+    print("        first:  \(first)")
+    print("        second: \(second)")
+
     let x = min(first.x, second.x)
     let y = min(first.y, second.y)
     let width = abs(first.x - second.x)
     let height = abs(first.y - second.y)
+    print("        x: \(x)")
+    print("        y: \(y)")
+    print("        w: \(width)")
+    print("        h: \(height)")
+
     
     return NSRect.init(x:x, y:y, width:width, height:height)
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+
     
     // Views
-    var popover: NSPopover!
     var statusBarItem: NSStatusItem!
     var swcs: [SecretWindowController] = []
+    var about: AboutWindowController?
     
     // Mouse drag state
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
@@ -157,6 +215,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     
     @Published var rects: [RectController] = []
     
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         // make a secret window for each screen. These will
@@ -164,7 +223,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSScreen.screens.forEach { screen in
             self.swcs.append(SecretWindowController(screen))
         }
-        
+                
         // Global hotkey (hardcoded to cmd + opt + 6 for now)
         // TODO: Make this modifiable
         let hotKey = HotKey(key: .six, modifiers: [.command, .option])
@@ -190,7 +249,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(
             withTitle: "About...",
-            action: #selector(doMenuItem(_:)),
+            action: #selector(showAbout(_:)),
             keyEquivalent: ""
         )
         menu.addItem(
@@ -210,21 +269,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @objc func doMenuItem(_ sender: AnyObject?) {
         print("HEYOOO")
     }
-    
-    /**
-     Displays or hides the status bar popover.
-     */
-    @objc func togglePopover(_ sender: AnyObject?) {
-        if let button = self.statusBarItem.button {
-            if self.popover.isShown {
-                self.popover.performClose(sender)
-            } else {
-                self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
-                self.popover.contentViewController?.view.window?.becomeKey()
-            }
-        }
-    }
-    
+        
     /**
      Enter the "capture hint" mode. In this mode, we show a tinted NSWindow over every screen, and we watch for a drag gesture. The gesture marks the bounds of a rectangle which we use to make a hint. Once the gesture is done, the event monitors tear themselves down.
      */
@@ -249,6 +294,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         })
     }
     
+    @objc func showAbout(_ sender: AnyObject?) {
+        if (self.about == nil) {
+            self.about = AboutWindowController.init()
+        }
+        let about = self.about!
+        about.showWindow(nil)
+    }
+    
     /**
      Set up listeners for mouse events. They're used to record the next drag gesture. Once the gesture is recorded, the monitors are removed to keep from intercepting gestures on hints as well.
      */
@@ -260,6 +313,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
             
             let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
+            print("Mouse: \(NSEvent.mouseLocation)")
             if (self.activeRect != nil) {
                 self.activeRect!.setRect(rect)
                 self.activeRect!.finishDragging()
@@ -290,13 +344,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             // be screenshot (since the rect we are drawng can't be put in front of the menu bar).
             // We either have to somehow include the menu bar _or_ factor that in when calculating
             // this rect.
-            let menuBarHeigth = NSApplication.shared.mainMenu?.menuBarHeight ?? 0
             let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
             if (self.activeRect == nil) {
                 self.activeRect = RectController(rect);
                 self.activeRect!.showWindow(nil)
             }
             self.activeRect!.setRect(rect)
+            
+            let windowRect = rect;
+            
+            let screenshotRect = NSRect(
+                x: windowRect.minX,
+                y: NSScreen.main!.frame.maxY - windowRect.maxY,
+                width: windowRect.width,
+                height: windowRect.height)
+
+            
+            
+            print("R: \(rect)")
+            print("S: \(screenshotRect)")
+            print("       Y CALC: \(NSScreen.main!.frame.maxY) - \(windowRect.maxY) = \(NSScreen.main!.frame.maxY)")
+            print("       MAIN SCREEN: \(NSScreen.main!)")
+            print("")
+
             return event
         }
         
