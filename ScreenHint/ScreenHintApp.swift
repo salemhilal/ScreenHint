@@ -114,7 +114,7 @@ class RectController:  NSWindowController, NSWindowDelegate {
     func setRect(_ rect: NSRect) {
         self.window?.setFrame(rect, display: true, animate: false)
     }
-        
+    
     func finishDragging() {
         // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
         // but that's not true for the rect passed to CGWindowListCreateImage
@@ -134,7 +134,7 @@ class RectController:  NSWindowController, NSWindowDelegate {
             y: screenHeight - windowRect.minY - windowRect.height,
             width: windowRect.width,
             height: windowRect.height)
-
+        
         
         // Make sure the window keeps its aspect ratio when resizing
         window.aspectRatio = window.frame.size
@@ -177,8 +177,7 @@ func getRectForPoints(_ first: NSPoint, _ second: NSPoint) -> NSRect {
     return NSRect.init(x:x, y:y, width:width, height:height)
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
-
+class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // Views
     var statusBarItem: NSStatusItem!
@@ -197,18 +196,52 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     
     @Published var rects: [RectController] = []
     
-    
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
+    func generateSecretWindows() {
+        // Remove existing screens
+        self.swcs.forEach { swc in
+            swc.close()
+        }
+        self.swcs = []
         // make a secret window for each screen. These will
         // capture mouse events for us when making a new hint.
         NSScreen.screens.forEach { screen in
             self.swcs.append(SecretWindowController(screen))
         }
-                
-        // Global hotkey (hardcoded to cmd + opt + 6 for now)
+
+    }
+    
+    // Disable the global hotkey so that the menu hotkey can be the same
+    func menuWillOpen(_ menu: NSMenu) {
+        if let hotkey = self.hotKey {
+            hotkey.isPaused = true
+        }
+    }
+    
+    // Re-enable the global hotkey once the menu has closed
+    func menuDidClose(_ menu: NSMenu) {
+        if let hotkey = self.hotKey {
+            hotkey.isPaused = false
+        }
+
+    }
+    
+    
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        // Generate secret windows, now and any time the screen configuration changes
+        self.generateSecretWindows()
+        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
+                                               object: NSApplication.shared,
+                                               queue: OperationQueue.main) {
+            notification -> Void in
+            print("screen parameters changed")
+            self.generateSecretWindows()
+        }
+        
+        
+        // Global hotkey (hardcoded to cmd + shift + 1 for now)
         // TODO: Make this modifiable
-        let hotKey = HotKey(key: .six, modifiers: [.command, .option])
+        let hotKey = HotKey(key: .one, modifiers: [.command, .shift])
         hotKey.keyDownHandler = {
             self.captureHint(nil)
         }
@@ -221,8 +254,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         menu.addItem(
             withTitle: "New Hint",
             action: #selector(captureHint(_:)),
-            keyEquivalent: ""
-        )
+            keyEquivalent: "1"
+        ).keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(
             withTitle: "Clear All Hints",
             action: #selector(clearHints(_:)),
@@ -239,7 +272,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             action: #selector(gameOver(_:)),
             keyEquivalent: ""
         )
-
+        
+        menu.delegate = self
+        
         self.statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         self.statusBarItem.menu = menu
         
@@ -247,7 +282,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             button.image = NSImage(named: "Icon")
         }
     }
-            
+    
     /**
      Enter the "capture hint" mode. In this mode, we show a tinted NSWindow over every screen, and we watch for a drag gesture. The gesture marks the bounds of a rectangle which we use to make a hint. Once the gesture is done, the event monitors tear themselves down.
      */
@@ -327,9 +362,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 self.activeRect!.showWindow(nil)
             }
             self.activeRect!.setRect(rect)
-            
-            let windowRect = rect;
-            
+                        
             return event
         }
         
