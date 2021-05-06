@@ -117,7 +117,8 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
 
 }
 
-class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate {
+class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
+    var allDesktopsMenuItem: NSMenuItem?
     func shouldCopy() {
         guard let screenshot = self.screenshot else {
             return
@@ -126,6 +127,22 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate 
         let image = NSImage.init(cgImage: screenshot, size: self.window!.frame.size)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.writeObjects([image])
+    }
+    
+    @objc func menuCopyHandler(_ sender: AnyObject?) {
+        self.shouldCopy()
+    }
+    
+    @objc func menuShowOnAllDesktopsHandler(_ sender: AnyObject?) {
+        let oldState = self.allDesktopsMenuItem?.state;
+        let newState: NSControl.StateValue = oldState == .on ? .off : .on;
+        self.allDesktopsMenuItem?.state = newState;
+        
+        if (newState == .on) {
+            self.window?.collectionBehavior = [.canJoinAllSpaces]
+        } else {
+            self.window?.collectionBehavior = [.moveToActiveSpace]
+        }
     }
     
     var screenshot: CGImage?
@@ -150,8 +167,29 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate 
         window.collectionBehavior = [.canJoinAllSpaces]
 
         super.init(window: window)
+        
         window.delegate = self
         window.copyDelegate = self
+        let menu = NSMenu()
+        
+        let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "")
+        copyItem.keyEquivalentModifierMask = [.command]
+        copyItem.target = self
+        
+        
+        let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)),
+                                                keyEquivalent: "")
+        showItem.state = .on
+        showItem.target = self
+        self.allDesktopsMenuItem = showItem
+        
+        window.menu = menu
+    }
+    
+    override func rightMouseUp(with event: NSEvent) {
+        let point = NSEvent.mouseLocation;
+        print("right click point \(point)")
+        self.window!.menu?.popUp(positioning: nil, at: point, in: nil)
     }
     
     override func keyDown(with event: NSEvent) {
