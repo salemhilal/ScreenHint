@@ -8,6 +8,7 @@
 import SwiftUI
 import AppKit
 import HotKey
+import Carbon.HIToolbox
 
 /**
  This is an image view that passes drag events up to its parent window.
@@ -18,10 +19,36 @@ class WindowDraggableImageView: NSImageView{
     }
 }
 
+protocol CopyDelegate {
+    func shouldCopy();
+}
+
 /**
  This is a window that closes when you doubleclick it.
  */
 class HintWindow: NSWindow {
+    
+    var copyDelegate: CopyDelegate?
+    var screenshot: CGImage? = nil
+    
+    override var canBecomeKey: Bool {
+        get {
+            return true
+        }
+    }
+    
+    override var canBecomeMain: Bool {
+        get {
+            return true
+        }
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        if (event.charactersIgnoringModifiers == "c" && event.modifierFlags.contains(.command)) {
+            self.copyDelegate?.shouldCopy()
+        }
+    }
+    
     override func mouseUp(with event: NSEvent) {
         // If this window is double-clicked (anywhere), close it.
         if event.clickCount >= 2 {
@@ -29,7 +56,6 @@ class HintWindow: NSWindow {
         }
         super.mouseUp(with: event)
     }
-    
 }
 
 class AboutWindowController: NSWindowController, NSWindowDelegate {
@@ -78,6 +104,7 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
         secretWindow.level = .screenSaver
         secretWindow.ignoresMouseEvents = false
         secretWindow.isMovable = false
+        secretWindow.collectionBehavior = [.stationary, .transient, .canJoinAllSpaces]
         
         super.init(window: secretWindow)
         secretWindow.delegate = self
@@ -87,14 +114,26 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
 }
 
-class RectController:  NSWindowController, NSWindowDelegate {
+class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate {
+    func shouldCopy() {
+        guard let screenshot = self.screenshot else {
+            return
+        }
+        
+        let image = NSImage.init(cgImage: screenshot, size: self.window!.frame.size)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.writeObjects([image])
+    }
     
+    var screenshot: CGImage?
+        
     init(_ rect: NSRect) {
         // TODO: when the window's origin changes (i.e. when dragging from top-right
         //       to bottom-left), the window jitters sliglty.
-        let window = HintWindow(contentRect: rect, styleMask: [.resizable, .docModalWindow], backing: .buffered, defer: false)
+        let window = HintWindow(contentRect: rect, styleMask: [.resizable], backing: .buffered, defer: false)
         window.isOpaque = false
         window.level = .screenSaver
         window.backgroundColor = NSColor.blue
@@ -107,8 +146,18 @@ class RectController:  NSWindowController, NSWindowDelegate {
         window.contentView?.layer?.borderWidth = 1
         window.contentView?.layer?.borderColor = CGColor.black
         
+        // TODO: Make this configurable
+        window.collectionBehavior = [.canJoinAllSpaces]
+
         super.init(window: window)
         window.delegate = self
+        window.copyDelegate = self
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        if (event.charactersIgnoringModifiers == "c" && event.modifierFlags.contains(.command)) {
+            print("WINDOW CONTROLLER TIME \(event.modifierFlags)")
+        }
     }
     
     func setRect(_ rect: NSRect) {
@@ -159,7 +208,7 @@ class RectController:  NSWindowController, NSWindowDelegate {
             self.window?.level = .floating
             self.window?.isOpaque = true
             self.window?.contentView?.addSubview(imageView)
-            
+            self.screenshot = screenshot
         }
     }
     
@@ -186,21 +235,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // Mouse drag state
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
-    var activeRect: RectController?
+    var activeRect: HintWindowController?
     var hotKey: HotKey?
     
     // Mouse event monitors
     var mouseDownMonitor: Any?
     var mouseUpMonitor: Any?
     var mouseDragMonitor: Any?
+    var keyDownMonitor: Any?
+
     
-    @Published var rects: [RectController] = []
+    @Published var rects: [HintWindowController] = []
     
     func generateSecretWindows() {
         // Remove existing screens
         self.swcs.forEach { swc in
             swc.close()
         }
+        // TODO: Make sure monitors are unbound here
         self.swcs = []
         // make a secret window for each screen. These will
         // capture mouse events for us when making a new hint.
@@ -238,6 +290,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self.generateSecretWindows()
         }
         
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification,
+                                                          object: nil,
+                                                          queue: OperationQueue.main) { notification -> Void in
+            // TODO: hide secret window when space is transitioning
+        }
         
         // Global hotkey (hardcoded to cmd + shift + 1 for now)
         // TODO: Make this modifiable
@@ -272,6 +329,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             action: #selector(gameOver(_:)),
             keyEquivalent: ""
         )
+        // TODO: Settings
+        //    - whether or not to allow hints to display on all desktops
+        //    - set global hotkey
         
         menu.delegate = self
         
@@ -315,57 +375,90 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         about.showWindow(nil)
     }
     
+    func endCaptureHint() {
+        self.activeRect = nil
+        self.swcs.forEach({ $0.close() })
+        self.removeMonitors()
+    }
+    
     /**
      Set up listeners for mouse events. They're used to record the next drag gesture. Once the gesture is recorded, the monitors are removed to keep from intercepting gestures on hints as well.
      */
     func setupMonitors() {
-        self.mouseDownMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { event in
-            self.dragStart = NSEvent.mouseLocation
-            return event
-        }
-        self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
-            
-            let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-            if (self.activeRect != nil) {
-                self.activeRect!.setRect(rect)
-                self.activeRect!.finishDragging()
-                self.rects.append(self.activeRect!)
-                
+        if (self.mouseDownMonitor == nil) {
+            self.mouseDownMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { event in
+                self.dragStart = NSEvent.mouseLocation
+                return event
             }
-            self.activeRect = nil
-            self.swcs.forEach({$0.close()})
-            
-            // Release monitors, making sure not to double-release them
-            // (since apparently that's bad)
-            if (self.mouseDownMonitor != nil) {
-                NSEvent.removeMonitor(self.mouseDownMonitor!)
-                self.mouseDownMonitor = nil
-            }
-            if (self.mouseUpMonitor != nil) {
-                NSEvent.removeMonitor(self.mouseUpMonitor!)
-                self.mouseUpMonitor = nil
-            }
-            if (self.mouseDragMonitor != nil) {
-                NSEvent.removeMonitor(self.mouseDragMonitor!)
-                self.mouseDragMonitor = nil
-            }
-            return event
-        }
-        self.mouseDragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
-            // TODO: Because we use .floating for everything, the nav bar can't
-            // be screenshot (since the rect we are drawng can't be put in front of the menu bar).
-            // We either have to somehow include the menu bar _or_ factor that in when calculating
-            // this rect.
-            let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-            if (self.activeRect == nil) {
-                self.activeRect = RectController(rect);
-                self.activeRect!.showWindow(nil)
-            }
-            self.activeRect!.setRect(rect)
-                        
-            return event
+
         }
         
+        if (self.mouseDragMonitor == nil) {
+            self.mouseDragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
+                let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
+                if (self.activeRect == nil) {
+                    self.activeRect = HintWindowController(rect);
+                    self.activeRect!.showWindow(nil)
+                }
+                self.activeRect!.setRect(rect)
+                            
+                return event
+            }
+        }
+        
+        if (self.mouseUpMonitor == nil) {
+            self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
+                
+                let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
+                if (self.activeRect != nil) {
+                    self.activeRect!.setRect(rect)
+                    self.activeRect!.finishDragging()
+                    self.rects.append(self.activeRect!)
+                    self.activeRect!.window?.becomeFirstResponder()
+                    
+                }
+                self.endCaptureHint()
+                return event
+            }
+        }
+        
+        if (self.keyDownMonitor == nil) {
+            self.keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                // If escape is pressed and we are actively capturing a hint,
+                // stop capturing that hint.
+                print("CAPTURED \(event.keyCode)")
+                if (Int(event.keyCode) == kVK_Escape) {
+                    self.activeRect?.close()
+                    self.endCaptureHint()
+                }
+                
+                return nil
+            }
+        }
+        
+    }
+        
+    /**
+     Tear down our mouse event listeners if they're there, and unset them to ensure that we don't double-release them (since this is bad).
+     */
+    func removeMonitors() {
+        if let monitor = self.mouseDownMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        if let monitor = self.mouseUpMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        if let monitor = self.mouseDragMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        if let monitor = self.keyDownMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+
+        self.mouseDownMonitor = nil
+        self.mouseUpMonitor = nil
+        self.mouseDragMonitor = nil
+        self.keyDownMonitor = nil
     }
     
 }
