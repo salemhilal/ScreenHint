@@ -13,8 +13,21 @@ import Carbon.HIToolbox
 /**
  This is an image view that passes drag events up to its parent window.
  */
-class WindowDraggableImageView: NSImageView{
+class WindowDraggableImageView: NSImageView {
+    
+    // Without this, you have to focus on the parent window before this view
+    // can be used to drag the window.
+    override var mouseDownCanMoveWindow: Bool {
+        get {
+            return true
+        }
+    }
+    
     override public func mouseDown(with event: NSEvent) {
+        window?.performDrag(with: event)
+    }
+    
+    override public func mouseDragged(with event: NSEvent) {
         window?.performDrag(with: event)
     }
 }
@@ -52,7 +65,9 @@ class HintWindow: NSWindow {
     override func mouseUp(with event: NSEvent) {
         // If this window is double-clicked (anywhere), close it.
         if event.clickCount >= 2 {
-            self.close()
+            self.orderOut(self)
+            self.windowController?.dismissController(nil)
+            // TODO: remove self from rects array
         }
         super.mouseUp(with: event)
     }
@@ -162,6 +177,8 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         window.contentView?.wantsLayer = true
         window.contentView?.layer?.borderWidth = 1
         window.contentView?.layer?.borderColor = CGColor.black
+        // Causes a fast fade-out (at least at time of writing)
+        window.animationBehavior = .utilityWindow
         
         // TODO: Make this configurable
         window.collectionBehavior = [.canJoinAllSpaces]
@@ -188,14 +205,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     
     override func rightMouseUp(with event: NSEvent) {
         let point = NSEvent.mouseLocation;
-        print("right click point \(point)")
         self.window!.menu?.popUp(positioning: nil, at: point, in: nil)
-    }
-    
-    override func keyDown(with event: NSEvent) {
-        if (event.charactersIgnoringModifiers == "c" && event.modifierFlags.contains(.command)) {
-            print("WINDOW CONTROLLER TIME \(event.modifierFlags)")
-        }
     }
     
     func setRect(_ rect: NSRect) {
@@ -324,7 +334,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                                object: NSApplication.shared,
                                                queue: OperationQueue.main) {
             notification -> Void in
-            print("screen parameters changed")
             self.generateSecretWindows()
         }
         
@@ -336,7 +345,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         
         // Global hotkey (hardcoded to cmd + shift + 1 for now)
         // TODO: Make this modifiable
-        let hotKey = HotKey(key: .one, modifiers: [.command, .shift])
+        let hotKey = HotKey(key: .two, modifiers: [.command, .shift])
         hotKey.keyDownHandler = {
             self.captureHint(nil)
         }
@@ -403,6 +412,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.rects.forEach({(rect) in
             rect.window?.close()
         })
+        self.rects = []
     }
     
     @objc func showAbout(_ sender: AnyObject?) {
@@ -452,6 +462,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     self.activeRect!.setRect(rect)
                     self.activeRect!.finishDragging()
                     self.rects.append(self.activeRect!)
+                    
+                    // Clear out closed hints when we add a new one — they currently can't be re-opened once closed.
+                    self.rects = self.rects.filter({ rect in
+                        rect.window?.isVisible ?? false
+                    })
                     self.activeRect!.window?.becomeFirstResponder()
                     
                 }
@@ -464,7 +479,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self.keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 // If escape is pressed and we are actively capturing a hint,
                 // stop capturing that hint.
-                print("CAPTURED \(event.keyCode)")
                 if (Int(event.keyCode) == kVK_Escape) {
                     self.activeRect?.close()
                     self.endCaptureHint()
