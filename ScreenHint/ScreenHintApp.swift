@@ -52,7 +52,7 @@ class HintWindow: NSWindow {
     
     override var canBecomeMain: Bool {
         get {
-            return true
+            return false
         }
     }
     
@@ -106,13 +106,19 @@ class AboutWindowController: NSWindowController, NSWindowDelegate {
     }
 }
 
+class SecretWindow: NSWindow {
+    override var canBecomeKey: Bool {
+        return true
+    }
+}
+
 /**
  This is a hidden window that we display on every screen when the global shortcut is pressed.
  It captures mouse events so that you don't highlight or drag stuff when making a hint.
  */
 class SecretWindowController: NSWindowController, NSWindowDelegate {
     init(_ screen: NSScreen) {
-        let secretWindow = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
+        let secretWindow = SecretWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
         secretWindow.backgroundColor = NSColor.blue
         secretWindow.isOpaque = false
         secretWindow.alphaValue = 0.2
@@ -156,7 +162,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         if (newState == .on) {
             self.window?.collectionBehavior = [.canJoinAllSpaces]
         } else {
-            self.window?.collectionBehavior = [.moveToActiveSpace]
+            self.window?.collectionBehavior = [.managed]
         }
     }
     
