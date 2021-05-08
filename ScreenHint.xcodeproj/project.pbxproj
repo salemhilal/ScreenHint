@@ -431,6 +431,7 @@
 				CODE_SIGN_ENTITLEMENTS = ScreenHint/ScreenHint.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"ScreenHint/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = ScreenHint/Info.plist;
@@ -454,6 +455,7 @@
 				CODE_SIGN_ENTITLEMENTS = ScreenHint/ScreenHint.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"ScreenHint/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = ScreenHint/Info.plist;
