@@ -106,13 +106,13 @@
 			children = (
 				C9B09B33263D118600C401E2 /* ScreenHintApp.swift */,
 				C9B09B35263D118600C401E2 /* AboutView.swift */,
+				C90C29D22675BB470049C811 /* HintWindowController.swift */,
+				C90C29D4267672410049C811 /* SecretWindowController.swift */,
+				C90C29D6267672690049C811 /* AboutWindowController.swift */,
 				C9B09B37263D118900C401E2 /* Assets.xcassets */,
 				C9B09B3C263D118900C401E2 /* Info.plist */,
 				C9B09B3D263D118900C401E2 /* ScreenHint.entitlements */,
 				C9B09B39263D118900C401E2 /* Preview Content */,
-				C90C29D22675BB470049C811 /* HintWindowController.swift */,
-				C90C29D4267672410049C811 /* SecretWindowController.swift */,
-				C90C29D6267672690049C811 /* AboutWindowController.swift */,
 			);
 			path = ScreenHint;
 			sourceTree = "<group>";
