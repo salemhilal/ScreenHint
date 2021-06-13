@@ -229,8 +229,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     
     func endCaptureHint() {
-        self.swcs.forEach({ $0.close() })
         self.removeMonitors()
+        self.swcs.forEach({(secretWindow) in
+            secretWindow.setActive(false);
+            secretWindow.setHighlightRect(nil);
+            secretWindow.close()
+        })
+
     }
     
     /**
@@ -279,12 +284,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 })
                 activeRect.window?.becomeFirstResponder()
                 
-                
-                self.swcs.forEach({(secretWindow) in
-                    secretWindow.setActive(false);
-                    secretWindow.setHighlightRect(nil);
-                })
-
                 self.endCaptureHint()
                 return event
             }
