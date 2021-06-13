@@ -89,6 +89,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         window.level = .screenSaver
         window.backgroundColor = NSColor.blue
         window.alphaValue = 0.2
+        window.alphaValue = 0.0
         window.ignoresMouseEvents = false
         window.isMovableByWindowBackground = true
         window.isMovable = true

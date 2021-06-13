@@ -244,17 +244,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 self.dragStart = NSEvent.mouseLocation
                 return event
             }
-
         }
         
         if (self.mouseDragMonitor == nil) {
             self.mouseDragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
                 let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
                 if (self.activeRect == nil) {
-                    self.activeRect = HintWindowController(rect);
-                    self.activeRect!.showWindow(nil)
+                    let activeRect = HintWindowController(rect);
+                    activeRect.showWindow(nil)
+                    self.activeRect = activeRect
                 }
-                self.activeRect!.setRect(rect)
+                
+                self.swcs.forEach({(secretWindow) in
+                    if secretWindow.isPointInWindowScreen(self.dragStart) {
+                        secretWindow.setActive(true);
+                        secretWindow.setHighlightRect(rect);
+                    } else {
+                        secretWindow.setActive(false);
+                        secretWindow.setHighlightRect(nil);
+                    }
+                })
+                self.activeRect?.setRect(rect)
                             
                 return event
             }
@@ -264,18 +274,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
                 
                 let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-                if (self.activeRect != nil) {
-                    self.activeRect!.setRect(rect)
-                    self.activeRect!.finishDragging()
+                if let activeRect = self.activeRect {
+                    activeRect.setRect(rect)
+                    activeRect.finishDragging()
                     self.rects.append(self.activeRect!)
                     
                     // Clear out closed hints when we add a new one — they currently can't be re-opened once closed.
                     self.rects = self.rects.filter({ rect in
                         rect.window?.isVisible ?? false
                     })
-                    self.activeRect!.window?.becomeFirstResponder()
-                    
+                    activeRect.window?.becomeFirstResponder()
                 }
+                
+                self.swcs.forEach({(secretWindow) in
+                    secretWindow.setActive(false);
+                    secretWindow.setHighlightRect(nil);
+                })
+
                 self.endCaptureHint()
                 return event
             }
