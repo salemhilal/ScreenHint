@@ -32,79 +32,7 @@ class WindowDraggableImageView: NSImageView {
     }
 }
 
-class AboutWindowController: NSWindowController, NSWindowDelegate {
-    init() {
-        let width: CGFloat = 324;
-        let height: CGFloat = 200;
-        // Unlike in other places, we actually mean the main screen.
-        // This window is going to show up wherever the keyboard is focused to,
-        // so we want it to render in the center of that.
-        let screenFrame = NSScreen.main!.frame;
-        
-        let aboutRect = NSRect(
-            x: screenFrame.width / 2 - (width / 2),
-            y: screenFrame.height / 2 - (height / 2),
-            width: width,
-            height: height
-        )
-        let window = NSWindow(contentRect: aboutRect, styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.level = .floating
-        window.isMovable = true
-        
-        let contentView = AboutView()
-        let view = NSHostingView(rootView: contentView)
-        view.frame = NSRect(x: 0, y: 0, width: width, height: height);
-        window.contentView?.addSubview(view)
-        
-        super.init(window: window)
-        window.delegate = self
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
 
-class SecretWindow: NSWindow {
-    override var canBecomeKey: Bool {
-        return true
-    }
-}
-
-/**
- This is a hidden window that we display on every screen when the global shortcut is pressed.
- It captures mouse events so that you don't highlight or drag stuff when making a hint.
- */
-class SecretWindowController: NSWindowController, NSWindowDelegate {
-    init(_ screen: NSScreen) {
-        let secretWindow = SecretWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
-        secretWindow.backgroundColor = NSColor.blue
-        secretWindow.isOpaque = false
-        secretWindow.alphaValue = 0.2
-        secretWindow.level = .screenSaver
-        secretWindow.ignoresMouseEvents = false
-        secretWindow.isMovable = false
-        secretWindow.collectionBehavior = [.stationary, .transient, .canJoinAllSpaces]
-        
-        super.init(window: secretWindow)
-        secretWindow.delegate = self
-        
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-}
-
-func getRectForPoints(_ first: NSPoint, _ second: NSPoint) -> NSRect {
-    let x = min(first.x, second.x)
-    let y = min(first.y, second.y)
-    let width = abs(first.x - second.x)
-    let height = abs(first.y - second.y)
-    
-    return NSRect.init(x:x, y:y, width:width, height:height)
-}
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
@@ -157,6 +85,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     }
     
+    func getRectForPoints(_ first: NSPoint, _ second: NSPoint) -> NSRect {
+        let x = min(first.x, second.x)
+        let y = min(first.y, second.y)
+        let width = abs(first.x - second.x)
+        let height = abs(first.y - second.y)
+        
+        return NSRect.init(x:x, y:y, width:width, height:height)
+    }
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
@@ -240,7 +176,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let hasScreenAccess = CGPreflightScreenCaptureAccess();
         if (!hasScreenAccess) {
             let alert = NSAlert()
-            alert.messageText = "ScreenHint needs permission to capture your screen."
+            alert.messageText = "ScreenHint needs your permission to take screenshots."
             alert.informativeText = "Go to System Preferences > Security & Privacy > Privacy, and check \"ScreenHint\" under the Screen Recording section."
             alert.alertStyle = .warning
             alert.addButton(withTitle: "Open Settings")
@@ -313,7 +249,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         
         if (self.mouseDragMonitor == nil) {
             self.mouseDragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
-                let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
+                let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
                 if (self.activeRect == nil) {
                     self.activeRect = HintWindowController(rect);
                     self.activeRect!.showWindow(nil)
@@ -327,7 +263,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if (self.mouseUpMonitor == nil) {
             self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
                 
-                let rect = getRectForPoints(self.dragStart, NSEvent.mouseLocation);
+                let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
                 if (self.activeRect != nil) {
                     self.activeRect!.setRect(rect)
                     self.activeRect!.finishDragging()

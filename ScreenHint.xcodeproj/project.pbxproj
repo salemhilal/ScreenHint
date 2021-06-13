@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		C90C29D32675BB470049C811 /* HintWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D22675BB470049C811 /* HintWindowController.swift */; };
+		C90C29D5267672410049C811 /* SecretWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D4267672410049C811 /* SecretWindowController.swift */; };
+		C90C29D7267672690049C811 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D6267672690049C811 /* AboutWindowController.swift */; };
 		C9B09B34263D118600C401E2 /* ScreenHintApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B33263D118600C401E2 /* ScreenHintApp.swift */; };
 		C9B09B36263D118600C401E2 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B35263D118600C401E2 /* AboutView.swift */; };
 		C9B09B38263D118900C401E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9B09B37263D118900C401E2 /* Assets.xcassets */; };
@@ -36,6 +38,8 @@
 
 /* Begin PBXFileReference section */
 		C90C29D22675BB470049C811 /* HintWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintWindowController.swift; sourceTree = "<group>"; };
+		C90C29D4267672410049C811 /* SecretWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretWindowController.swift; sourceTree = "<group>"; };
+		C90C29D6267672690049C811 /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		C9B09B30263D118600C401E2 /* ScreenHint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenHint.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9B09B33263D118600C401E2 /* ScreenHintApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenHintApp.swift; sourceTree = "<group>"; };
 		C9B09B35263D118600C401E2 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
@@ -107,6 +111,8 @@
 				C9B09B3D263D118900C401E2 /* ScreenHint.entitlements */,
 				C9B09B39263D118900C401E2 /* Preview Content */,
 				C90C29D22675BB470049C811 /* HintWindowController.swift */,
+				C90C29D4267672410049C811 /* SecretWindowController.swift */,
+				C90C29D6267672690049C811 /* AboutWindowController.swift */,
 			);
 			path = ScreenHint;
 			sourceTree = "<group>";
@@ -273,6 +279,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C9B09B36263D118600C401E2 /* AboutView.swift in Sources */,
+				C90C29D7267672690049C811 /* AboutWindowController.swift in Sources */,
+				C90C29D5267672410049C811 /* SecretWindowController.swift in Sources */,
 				C90C29D32675BB470049C811 /* HintWindowController.swift in Sources */,
 				C9B09B34263D118600C401E2 /* ScreenHintApp.swift in Sources */,
 			);
