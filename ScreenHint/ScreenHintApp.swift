@@ -43,7 +43,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // Mouse drag state
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
-    var activeRect: HintWindowController?
     var hotKey: HotKey?
     
     // Mouse event monitors
@@ -230,7 +229,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     
     func endCaptureHint() {
-        self.activeRect = nil
         self.swcs.forEach({ $0.close() })
         self.removeMonitors()
     }
@@ -249,11 +247,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if (self.mouseDragMonitor == nil) {
             self.mouseDragMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { event in
                 let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-                if (self.activeRect == nil) {
-                    let activeRect = HintWindowController(rect);
-                    activeRect.showWindow(nil)
-                    self.activeRect = activeRect
-                }
                 
                 self.swcs.forEach({(secretWindow) in
                     if secretWindow.isPointInWindowScreen(self.dragStart) {
@@ -264,7 +257,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                         secretWindow.setHighlightRect(nil);
                     }
                 })
-                self.activeRect?.setRect(rect)
                             
                 return event
             }
@@ -274,17 +266,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
                 
                 let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-                if let activeRect = self.activeRect {
-                    activeRect.setRect(rect)
-                    activeRect.finishDragging()
-                    self.rects.append(self.activeRect!)
-                    
-                    // Clear out closed hints when we add a new one — they currently can't be re-opened once closed.
-                    self.rects = self.rects.filter({ rect in
-                        rect.window?.isVisible ?? false
-                    })
-                    activeRect.window?.becomeFirstResponder()
-                }
+                let activeRect = HintWindowController(rect);
+                activeRect.showWindow(nil)
+
+                activeRect.setRect(rect)
+                activeRect.finishDragging()
+                self.rects.append(activeRect)
+                
+                // Clear out closed hints when we add a new one — they currently can't be re-opened once closed.
+                self.rects = self.rects.filter({ rect in
+                    rect.window?.isVisible ?? false
+                })
+                activeRect.window?.becomeFirstResponder()
+                
                 
                 self.swcs.forEach({(secretWindow) in
                     secretWindow.setActive(false);
@@ -301,7 +295,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 // If escape is pressed and we are actively capturing a hint,
                 // stop capturing that hint.
                 if (Int(event.keyCode) == kVK_Escape) {
-                    self.activeRect?.close()
                     self.endCaptureHint()
                 }
                 
