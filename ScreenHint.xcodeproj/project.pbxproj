@@ -443,7 +443,7 @@
 				CODE_SIGN_ENTITLEMENTS = ScreenHint/ScreenHint.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"ScreenHint/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = ScreenHint/Info.plist;
@@ -452,8 +452,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = salem.ScreenHint;
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -467,7 +467,7 @@
 				CODE_SIGN_ENTITLEMENTS = ScreenHint/ScreenHint.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"ScreenHint/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = ScreenHint/Info.plist;
@@ -476,8 +476,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = salem.ScreenHint;
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
