@@ -10,6 +10,10 @@
 		C90C29D32675BB470049C811 /* HintWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D22675BB470049C811 /* HintWindowController.swift */; };
 		C90C29D5267672410049C811 /* SecretWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D4267672410049C811 /* SecretWindowController.swift */; };
 		C90C29D7267672690049C811 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D6267672690049C811 /* AboutWindowController.swift */; };
+		C9247BAE26779F830095BA5B /* ScreenHintLauncherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9247BAD26779F830095BA5B /* ScreenHintLauncherApp.swift */; };
+		C9247BB526779F870095BA5B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9247BB426779F870095BA5B /* Preview Assets.xcassets */; };
+		C9247BBC2677A1960095BA5B /* ScreenHintLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C9247BAB26779F830095BA5B /* ScreenHintLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C9247BBF2677A1D20095BA5B /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9247BBE2677A1D20095BA5B /* ServiceManagement.framework */; };
 		C9B09B34263D118600C401E2 /* ScreenHintApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B33263D118600C401E2 /* ScreenHintApp.swift */; };
 		C9B09B36263D118600C401E2 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B35263D118600C401E2 /* AboutView.swift */; };
 		C9B09B38263D118900C401E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9B09B37263D118900C401E2 /* Assets.xcassets */; };
@@ -36,10 +40,29 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		C9247BBB2677A1650095BA5B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LoginItems;
+			dstSubfolderSpec = 1;
+			files = (
+				C9247BBC2677A1960095BA5B /* ScreenHintLauncher.app in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		C90C29D22675BB470049C811 /* HintWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintWindowController.swift; sourceTree = "<group>"; };
 		C90C29D4267672410049C811 /* SecretWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretWindowController.swift; sourceTree = "<group>"; };
 		C90C29D6267672690049C811 /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
+		C9247BAB26779F830095BA5B /* ScreenHintLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenHintLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9247BAD26779F830095BA5B /* ScreenHintLauncherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenHintLauncherApp.swift; sourceTree = "<group>"; };
+		C9247BB426779F870095BA5B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		C9247BB626779F870095BA5B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C9247BB726779F870095BA5B /* ScreenHintLauncher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ScreenHintLauncher.entitlements; sourceTree = "<group>"; };
+		C9247BBE2677A1D20095BA5B /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		C9B09B30263D118600C401E2 /* ScreenHint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenHint.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9B09B33263D118600C401E2 /* ScreenHintApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenHintApp.swift; sourceTree = "<group>"; };
 		C9B09B35263D118600C401E2 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
@@ -56,11 +79,19 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		C9247BA826779F830095BA5B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C9B09B2D263D118600C401E2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				C9B26CA6263DF26F0041B14E /* HotKey in Frameworks */,
+				C9247BBF2677A1D20095BA5B /* ServiceManagement.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,13 +112,42 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C9247BAC26779F830095BA5B /* ScreenHintLauncher */ = {
+			isa = PBXGroup;
+			children = (
+				C9247BAD26779F830095BA5B /* ScreenHintLauncherApp.swift */,
+				C9247BB626779F870095BA5B /* Info.plist */,
+				C9247BB726779F870095BA5B /* ScreenHintLauncher.entitlements */,
+				C9247BB326779F870095BA5B /* Preview Content */,
+			);
+			path = ScreenHintLauncher;
+			sourceTree = "<group>";
+		};
+		C9247BB326779F870095BA5B /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				C9247BB426779F870095BA5B /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		C9247BBD2677A1D20095BA5B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C9247BBE2677A1D20095BA5B /* ServiceManagement.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		C9B09B27263D118600C401E2 = {
 			isa = PBXGroup;
 			children = (
 				C9B09B32263D118600C401E2 /* ScreenHint */,
 				C9B09B45263D118900C401E2 /* ScreenHintTests */,
 				C9B09B50263D118900C401E2 /* ScreenHintUITests */,
+				C9247BAC26779F830095BA5B /* ScreenHintLauncher */,
 				C9B09B31263D118600C401E2 /* Products */,
+				C9247BBD2677A1D20095BA5B /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -97,6 +157,7 @@
 				C9B09B30263D118600C401E2 /* ScreenHint.app */,
 				C9B09B42263D118900C401E2 /* ScreenHintTests.xctest */,
 				C9B09B4D263D118900C401E2 /* ScreenHintUITests.xctest */,
+				C9247BAB26779F830095BA5B /* ScreenHintLauncher.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,6 +207,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		C9247BAA26779F830095BA5B /* ScreenHintLauncher */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C9247BBA26779F870095BA5B /* Build configuration list for PBXNativeTarget "ScreenHintLauncher" */;
+			buildPhases = (
+				C9247BA726779F830095BA5B /* Sources */,
+				C9247BA826779F830095BA5B /* Frameworks */,
+				C9247BA926779F830095BA5B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ScreenHintLauncher;
+			productName = ScreenHintLauncher;
+			productReference = C9247BAB26779F830095BA5B /* ScreenHintLauncher.app */;
+			productType = "com.apple.product-type.application";
+		};
 		C9B09B2F263D118600C401E2 /* ScreenHint */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C9B09B56263D118900C401E2 /* Build configuration list for PBXNativeTarget "ScreenHint" */;
@@ -153,6 +231,7 @@
 				C9B09B2C263D118600C401E2 /* Sources */,
 				C9B09B2D263D118600C401E2 /* Frameworks */,
 				C9B09B2E263D118600C401E2 /* Resources */,
+				C9247BBB2677A1650095BA5B /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -208,9 +287,12 @@
 		C9B09B28263D118600C401E2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1220;
+				LastSwiftUpdateCheck = 1250;
 				LastUpgradeCheck = 1220;
 				TargetAttributes = {
+					C9247BAA26779F830095BA5B = {
+						CreatedOnToolsVersion = 12.5;
+					};
 					C9B09B2F263D118600C401E2 = {
 						CreatedOnToolsVersion = 12.2;
 					};
@@ -243,11 +325,20 @@
 				C9B09B2F263D118600C401E2 /* ScreenHint */,
 				C9B09B41263D118900C401E2 /* ScreenHintTests */,
 				C9B09B4C263D118900C401E2 /* ScreenHintUITests */,
+				C9247BAA26779F830095BA5B /* ScreenHintLauncher */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		C9247BA926779F830095BA5B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9247BB526779F870095BA5B /* Preview Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C9B09B2E263D118600C401E2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -274,6 +365,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		C9247BA726779F830095BA5B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9247BAE26779F830095BA5B /* ScreenHintLauncherApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C9B09B2C263D118600C401E2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -318,6 +417,56 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		C9247BB826779F870095BA5B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ScreenHintLauncher/ScreenHintLauncher.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"ScreenHintLauncher/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = ScreenHintLauncher/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHintLauncher;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C9247BB926779F870095BA5B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ScreenHintLauncher/ScreenHintLauncher.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"ScreenHintLauncher/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = ScreenHintLauncher/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHintLauncher;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		C9B09B54263D118900C401E2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -452,7 +601,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -476,7 +625,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -566,6 +715,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		C9247BBA26779F870095BA5B /* Build configuration list for PBXNativeTarget "ScreenHintLauncher" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C9247BB826779F870095BA5B /* Debug */,
+				C9247BB926779F870095BA5B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C9B09B2B263D118600C401E2 /* Build configuration list for PBXProject "ScreenHint" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

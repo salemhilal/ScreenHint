@@ -14,7 +14,7 @@ struct AboutView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .padding()
-            Text("Version 0.1.0 (Beta)")
+            Text("Version 1.0.2 (Build 6)")
             Link("Need help?", destination: URL(string: "mailto:screenhint@salem.io")!)
 
         }.padding()

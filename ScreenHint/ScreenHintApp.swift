@@ -9,6 +9,11 @@ import SwiftUI
 import AppKit
 import HotKey
 import Carbon.HIToolbox
+import ServiceManagement
+
+extension Notification.Name {
+    static let killScreenHintLauncher = Notification.Name("killScreenHintLauncher")
+}
 
 /**
  This is an image view that passes drag events up to its parent window.
@@ -95,9 +100,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-        let hasScreenAccess = CGPreflightScreenCaptureAccess();
+        let launcherAppId = "io.salem.ScreenHintLauncher"
+        let runningApps = NSWorkspace.shared.runningApplications
+        let isLauncherRunning = !runningApps.filter { $0.bundleIdentifier == launcherAppId }.isEmpty
+        
+        SMLoginItemSetEnabled(launcherAppId as CFString, true)
+        
+        if isLauncherRunning {
+            DistributedNotificationCenter.default().post(name: .killScreenHintLauncher, object: Bundle.main.bundleIdentifier!)
+        }
         
         // Ask for recording access if we don't have it
+        let hasScreenAccess = CGPreflightScreenCaptureAccess();
         if (!hasScreenAccess) {
             // The first time we request access, the settings window opens and an entry for ScreenHint is added to
             // the permissions section of Security & Privacy > Privacy > ScreenRecording. Subsequent requests don't
@@ -132,27 +146,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let menu = NSMenu()
         menu.addItem(withTitle: "ScreenHint v1.0", action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(
+        let newHintItem = menu.addItem(
             withTitle: "New Hint",
             action: #selector(captureHint(_:)),
             keyEquivalent: "2"
-        ).keyEquivalentModifierMask = [.command, .shift]
-        menu.addItem(
+        )
+        newHintItem.keyEquivalentModifierMask = [.command, .shift]
+        newHintItem.image = NSImage(systemSymbolName: "rectangle.dashed", accessibilityDescription: nil)
+        
+        let clearHintItem = menu.addItem(
             withTitle: "Clear All Hints",
             action: #selector(clearHints(_:)),
             keyEquivalent: ""
         )
+        clearHintItem.image = NSImage(systemSymbolName: "rectangle.stack.badge.minus", accessibilityDescription: nil)
+        
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(
+        
+        let aboutItem = menu.addItem(
             withTitle: "About...",
             action: #selector(showAbout(_:)),
             keyEquivalent: ""
         )
-        menu.addItem(
+        aboutItem.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: nil)
+        
+        let quitItem = menu.addItem(
             withTitle: "Quit",
             action: #selector(gameOver(_:)),
             keyEquivalent: ""
         )
+        quitItem.image = NSImage(systemSymbolName: "xmark", accessibilityDescription: nil)
         // TODO: Settings
         //    - whether or not to allow hints to display on all desktops
         //    - set global hotkey
