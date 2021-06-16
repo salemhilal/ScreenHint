@@ -63,22 +63,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     @Published var rects: [HintWindowController] = []
     
-    func logToFile(_ text: String) {
-        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-        let documentsDirectory = paths[0]
-        let logPath = documentsDirectory.appending("/console.log")
-        let cstr = URL(fileURLWithPath: logPath)
-        do {
-            try text.write(to: cstr, atomically: true, encoding: .utf8)
-        } catch {
-            print("Oh no: \(error)")
-        }
-    }
-    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-        logToFile("Hello from logToFile")
-
         // Register our launcher app as a login item
         // TODO: Make this optional. Don't ship an always-on login item! That's rude.
         SMLoginItemSetEnabled(self.launcherAppId as CFString, true)

@@ -4,77 +4,50 @@
 //
 //  Created by Salem on 6/14/21.
 //
+// Huge thanks to https://jogendra.dev/implementing-launch-at-login-feature-in-macos-apps
+// for being the only guide modern and clear enough to un-stick
+// when I tried to implement Launch-at-login the first time around
+//
 
 import Cocoa
-
-extension Notification.Name {
-    static let killScreenHintLauncher = Notification.Name("killScreenHintLauncher")
-}
+import os
 
 class ScreenHintLauncherAppDelegate: NSObject, NSApplicationDelegate {
-    
-    func logToFile(_ text: String) {
-        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-        let documentsDirectory = paths[0]
-        let logPath = documentsDirectory.appending("/console.log")
-        let cstr = URL(fileURLWithPath: logPath)
-        do {
-            try text.write(to: cstr, atomically: true, encoding: .utf8)
-        } catch {
-            print("Oh no: \(error)")
-        }
-    }
-
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
         let mainAppIdentifier = "io.salem.ScreenHint"
         let runningApps = NSWorkspace.shared.runningApplications
-        let isRunning = !runningApps.filter { $0.bundleIdentifier == mainAppIdentifier }.isEmpty
+        let isRunning = runningApps.contains { $0.bundleIdentifier == mainAppIdentifier }
 
-        if !isRunning {
-            DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.terminate), name: .killScreenHintLauncher, object: mainAppIdentifier)
+        // ScreenHint is already running; we can quit.
+        if isRunning {
+            NSApp.terminate(nil)
+        }
 
-            let path = Bundle.main.bundlePath as NSString
-            var components = path.pathComponents
-            components.removeLast()
-            components.removeLast()
-            components.removeLast()
-            components.append("MacOS")
-            components.append("ScreenHint")
-            
-            let newPath = NSString.path(withComponents: components)
-            logToFile("Screenhint - Path to ScreenHint launcher is \(newPath)")
-            
-            NSWorkspace.shared.launchApplication(newPath)
-            /*
-            
-            guard let newUrl = URL.init(string:newPath) else {
-                // URL is invalid; launch at login won't work, but that's not the end of the world.
-                NSLog("Screenhint - Path to ScreenHint launcher is invalid: \(newPath)")
-                return
-            }
-            let config = NSWorkspace.OpenConfiguration.init()
-
-            NSLog("Screenhint - Launching ScreenHint: \(newUrl)")
-            NSWorkspace.shared.openApplication(at: newUrl, configuration: config) { (app, error) in
-                // Something went wrong launching ScreenHint
-                if let e = error {
-                    NSLog("Screenhint - Oh shit: \(e)")
-                    
-                }
-                self.terminate()
-
-            }
- */
+        // ScreenHint.app is a few levels up from where the launcher is.
+        // We need to peel off:
+        //   - ScreenHintLauncher.app
+        //   - LoginItems/
+        //   - Library/
+        //   - Contents/
+        var path = Bundle.main.bundlePath as NSString
+        for _ in 1...4 {
+            path = path.deletingLastPathComponent as NSString
         }
         
-        logToFile("Screenhint - Turning off")
-        self.terminate()
-
-    }
-    
-    @objc func terminate() {
-        NSApp.terminate(nil)
+        // Give the path a scheme
+        path = "file://\(path)" as NSString
+        
+        // Convert our path to a URL and use it to launch ScreenHint
+        guard let url = URL(string: path as String) else { return }
+        os_log("ScreenHint - Attenpting to open URL \(url)")
+        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration()) { (_, error) in
+            if (error != nil) {
+                os_log(.error, "Error opening ScreenHint from ScreenHintLauncher")
+            }
+            
+            NSApp.terminate(nil)
+        }
     }
 }
