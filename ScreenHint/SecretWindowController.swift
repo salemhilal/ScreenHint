@@ -16,7 +16,7 @@ class SecretWindow: NSWindow {
 }
 
 /**
- This is a hidden window that we display on every screen when the global shortcut is pressed.
+ This is a translucent window that we display on every screen when the global shortcut is pressed.
  It captures mouse events so that you don't highlight or drag stuff when making a hint.
  */
 class SecretWindowController: NSWindowController, NSWindowDelegate {
@@ -60,9 +60,6 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
             frame.minY <= point.y &&
             frame.maxY >= point.y
         
-        print("Screen: \(frame)")
-        print("Point: \(point)")
-        print("Contained? \(isInScreen)")
         return isInScreen
     }
     

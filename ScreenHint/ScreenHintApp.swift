@@ -10,6 +10,7 @@ import AppKit
 import HotKey
 import Carbon.HIToolbox
 import ServiceManagement
+import os
 
 extension Notification.Name {
     static let killScreenHintLauncher = Notification.Name("killScreenHintLauncher")
@@ -55,17 +56,82 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var mouseUpMonitor: Any?
     var mouseDragMonitor: Any?
     var keyDownMonitor: Any?
+    
+    // The ID of our launcher app
+    let launcherAppId = "io.salem.ScreenHintLauncher"
 
     
     @Published var rects: [HintWindowController] = []
     
+    func logToFile(_ text: String) {
+        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+        let documentsDirectory = paths[0]
+        let logPath = documentsDirectory.appending("/console.log")
+        let cstr = URL(fileURLWithPath: logPath)
+        do {
+            try text.write(to: cstr, atomically: true, encoding: .utf8)
+        } catch {
+            print("Oh no: \(error)")
+        }
+    }
+    
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        logToFile("Hello from logToFile")
+
+        // Register our launcher app as a login item
+        // TODO: Make this optional. Don't ship an always-on login item! That's rude.
+        SMLoginItemSetEnabled(self.launcherAppId as CFString, true)
+        
+        // Ask for recording access if we don't have it
+        let hasScreenAccess = CGPreflightScreenCaptureAccess();
+        if (!hasScreenAccess) {
+            // The first time we request access, the settings window opens and an entry for ScreenHint is added to
+            // the permissions section of Security & Privacy > Privacy > ScreenRecording. Subsequent requests don't
+            // seem to open settings, so use #checkForPermissions() instead.
+            CGRequestScreenCaptureAccess()
+        }
+                
+        // Generate secret windows, now and any time the screen configuration changes
+        self.generateSecretWindows()
+        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
+                                               object: NSApplication.shared,
+                                               queue: OperationQueue.main) {
+            notification -> Void in
+            self.generateSecretWindows()
+        }
+        
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification,
+                                                          object: nil,
+                                                          queue: OperationQueue.main) { notification -> Void in
+            // TODO: hide secret window when space is transitioning
+        }
+        
+        // Set up global hotkey (hardcoded to cmd + shift + 2 for now)
+        // TODO: Make this modifiable
+        let hotKey = HotKey(key: .two, modifiers: [.command, .shift])
+        hotKey.keyDownHandler = {
+            self.captureHint(nil)
+        }
+        self.hotKey = hotKey
+        
+        // Initialize the status bar menu
+        self.createMenu()
+    }
+    
+
+    /**
+     Create a SecretWindowController for each monitor, clearing any existing SecretWindowControllers.
+     */
     func generateSecretWindows() {
         // Remove existing screens
         self.swcs.forEach { swc in
             swc.close()
         }
+        
         // TODO: Make sure monitors are unbound here
         self.swcs = []
+        
         // make a secret window for each screen. These will
         // capture mouse events for us when making a new hint.
         NSScreen.screens.forEach { screen in
@@ -98,53 +164,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return NSRect.init(x:x, y:y, width:width, height:height)
     }
     
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
-        let launcherAppId = "io.salem.ScreenHintLauncher"
-        let runningApps = NSWorkspace.shared.runningApplications
-        let isLauncherRunning = !runningApps.filter { $0.bundleIdentifier == launcherAppId }.isEmpty
-        
-        SMLoginItemSetEnabled(launcherAppId as CFString, true)
-        
-        if isLauncherRunning {
-            DistributedNotificationCenter.default().post(name: .killScreenHintLauncher, object: Bundle.main.bundleIdentifier!)
-        }
-        
-        // Ask for recording access if we don't have it
-        let hasScreenAccess = CGPreflightScreenCaptureAccess();
-        if (!hasScreenAccess) {
-            // The first time we request access, the settings window opens and an entry for ScreenHint is added to
-            // the permissions section of Security & Privacy > Privacy > ScreenRecording. Subsequent requests don't
-            // seem to open settings, so use #checkForPermissions() instead.
-            CGRequestScreenCaptureAccess()
-        }
-                
-        // Generate secret windows, now and any time the screen configuration changes
-        self.generateSecretWindows()
-        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
-                                               object: NSApplication.shared,
-                                               queue: OperationQueue.main) {
-            notification -> Void in
-            self.generateSecretWindows()
-        }
-        
-        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification,
-                                                          object: nil,
-                                                          queue: OperationQueue.main) { notification -> Void in
-            // TODO: hide secret window when space is transitioning
-        }
-        
-        // Global hotkey (hardcoded to cmd + shift + 2 for now)
-        // TODO: Make this modifiable
-        let hotKey = HotKey(key: .two, modifiers: [.command, .shift])
-        hotKey.keyDownHandler = {
-            self.captureHint(nil)
-        }
-        self.hotKey = hotKey
-        
-        // Set up the status bar menu
+    /**
+     Set up the status bar menu
+     */
+    func createMenu() {
         let menu = NSMenu()
-        menu.addItem(withTitle: "ScreenHint v1.0", action: nil, keyEquivalent: "")
+        
+        // Unselectable item displaying the app name and version
+        menu.addItem(withTitle: "ScreenHint v1.0.2", action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         let newHintItem = menu.addItem(
             withTitle: "New Hint",

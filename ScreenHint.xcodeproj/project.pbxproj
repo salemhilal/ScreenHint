@@ -14,6 +14,7 @@
 		C9247BB526779F870095BA5B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9247BB426779F870095BA5B /* Preview Assets.xcassets */; };
 		C9247BBC2677A1960095BA5B /* ScreenHintLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C9247BAB26779F830095BA5B /* ScreenHintLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C9247BBF2677A1D20095BA5B /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9247BBE2677A1D20095BA5B /* ServiceManagement.framework */; };
+		C95AE763267A2B8C007A5190 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95AE762267A2B8C007A5190 /* main.swift */; };
 		C9B09B34263D118600C401E2 /* ScreenHintApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B33263D118600C401E2 /* ScreenHintApp.swift */; };
 		C9B09B36263D118600C401E2 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B35263D118600C401E2 /* AboutView.swift */; };
 		C9B09B38263D118900C401E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9B09B37263D118900C401E2 /* Assets.xcassets */; };
@@ -63,6 +64,7 @@
 		C9247BB626779F870095BA5B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C9247BB726779F870095BA5B /* ScreenHintLauncher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ScreenHintLauncher.entitlements; sourceTree = "<group>"; };
 		C9247BBE2677A1D20095BA5B /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
+		C95AE762267A2B8C007A5190 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C9B09B30263D118600C401E2 /* ScreenHint.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenHint.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9B09B33263D118600C401E2 /* ScreenHintApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenHintApp.swift; sourceTree = "<group>"; };
 		C9B09B35263D118600C401E2 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				C9247BAD26779F830095BA5B /* ScreenHintLauncherApp.swift */,
+				C95AE762267A2B8C007A5190 /* main.swift */,
 				C9247BB626779F870095BA5B /* Info.plist */,
 				C9247BB726779F870095BA5B /* ScreenHintLauncher.entitlements */,
 				C9247BB326779F870095BA5B /* Preview Content */,
@@ -369,6 +372,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C95AE763267A2B8C007A5190 /* main.swift in Sources */,
 				C9247BAE26779F830095BA5B /* ScreenHintLauncherApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -590,6 +594,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ScreenHint/ScreenHint.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 6;
@@ -614,6 +619,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ScreenHint/ScreenHint.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 6;
