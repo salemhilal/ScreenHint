@@ -42,10 +42,14 @@ class WindowDraggableImageView: NSImageView {
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
-    // Views
+    // Status bar item
     var statusBarItem: NSStatusItem!
+    
+    // ViewControllers
     var swcs: [SecretWindowController] = []
     var about: AboutWindowController?
+    var settings: SettingsWindowController?
+    
     
     // Mouse drag state
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
@@ -59,12 +63,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // The ID of our launcher app
     let launcherAppId = "io.salem.ScreenHintLauncher"
-
     
-    @Published var rects: [HintWindowController] = []
+    @AppStorage("pinToScreen") private var pinToScreen = false
+    @Published var hints: [HintWindowController] = []
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
+                
         // Register our launcher app as a login item
         // TODO: Make this optional. Don't ship an always-on login item! That's rude.
         SMLoginItemSetEnabled(self.launcherAppId as CFString, true)
@@ -105,7 +109,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.createMenu()
     }
     
-
     /**
      Create a SecretWindowController for each monitor, clearing any existing SecretWindowControllers.
      */
@@ -155,9 +158,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
      */
     func createMenu() {
         let menu = NSMenu()
-        
+        let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0")
+
         // Unselectable item displaying the app name and version
-        menu.addItem(withTitle: "ScreenHint v1.0.2", action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: "ScreenHint v\(version)", action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         let newHintItem = menu.addItem(
             withTitle: "New Hint",
@@ -173,6 +177,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             keyEquivalent: ""
         )
         clearHintItem.image = NSImage(systemSymbolName: "rectangle.stack.badge.minus", accessibilityDescription: nil)
+        
+        let settingsItem = menu.addItem(
+            withTitle: "Settings...",
+            action: #selector(showSettings(_:)),
+            keyEquivalent: ","
+        )
+        settingsItem.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
         
         menu.addItem(NSMenuItem.separator())
         
@@ -235,7 +246,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if (!self.checkForPermissions()) {
             return
         }
+        
+        // Show the screen capture overlays on each screen
         self.swcs.forEach({ $0.showWindow(nil); })
+        
+        // Set up event monitors
         self.setupMonitors()
     }
     
@@ -250,18 +265,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
      Closes all hints.
      */
     @objc func clearHints(_ sender: AnyObject?) {
-        self.rects.forEach({(rect) in
+        self.hints.forEach({(rect) in
             rect.window?.close()
         })
-        self.rects = []
+        self.hints = []
     }
     
     @objc func showAbout(_ sender: AnyObject?) {
         if (self.about == nil) {
             self.about = AboutWindowController.init()
         }
-        let about = self.about!
+        guard let about = self.about else { return }
         about.showWindow(nil)
+    }
+    
+    @objc func showSettings(_ sender: AnyObject?) {
+        if (self.settings == nil) {
+            self.settings = SettingsWindowController.init()
+        }
+        guard let settings = self.settings else { return }
+        settings.showWindow(nil)
     }
     
     func endCaptureHint() {
@@ -307,18 +330,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
                 
                 let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-                let activeRect = HintWindowController(rect);
-                activeRect.showWindow(nil)
+                let newHint = HintWindowController(rect);
+                newHint.showWindow(nil)
 
-                activeRect.setRect(rect)
-                activeRect.finishDragging()
-                self.rects.append(activeRect)
+                newHint.setRect(rect)
+                newHint.finishDragging()
+                self.hints.append(newHint)
                 
                 // Clear out closed hints when we add a new one — they currently can't be re-opened once closed.
-                self.rects = self.rects.filter({ rect in
+                self.hints = self.hints.filter({ rect in
                     rect.window?.isVisible ?? false
                 })
-                activeRect.window?.becomeFirstResponder()
+                newHint.window?.becomeFirstResponder()
                 
                 self.endCaptureHint()
                 return event

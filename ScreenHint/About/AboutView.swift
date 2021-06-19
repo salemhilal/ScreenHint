@@ -7,14 +7,17 @@
 
 import SwiftUI
 
-struct AboutView: View {    
+struct AboutView: View {
+    let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0")
+    let build = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0" )
+    
     var body: some View {
         VStack {
             Image("Logo")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .padding()
-            Text("Version 1.0.2 (Build 6)")
+            Text("Version \(self.version) (Build \(self.build))")
             Link("Need help?", destination: URL(string: "mailto:screenhint@salem.io")!)
 
         }.padding()

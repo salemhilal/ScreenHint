@@ -7,6 +7,7 @@
 
 import Foundation
 import AppKit
+import SwiftUI
 
 
 protocol CopyDelegate {
@@ -52,7 +53,56 @@ class HintWindow: NSWindow {
 }
 
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
+    
     var allDesktopsMenuItem: NSMenuItem?
+    var screenshot: CGImage?
+    @AppStorage("pinToScreen") private var pinToScreen = false
+        
+    init(_ rect: NSRect) {
+        // TODO: when the window's origin changes (i.e. when dragging from top-right
+        //       to bottom-left), the window jitters sliglty.
+        let window = HintWindow(contentRect: rect, styleMask: [.resizable], backing: .buffered, defer: false)
+        window.isOpaque = false
+        window.level = .screenSaver
+        window.backgroundColor = NSColor.blue
+        window.alphaValue = 0.2
+        window.alphaValue = 0.0
+        window.ignoresMouseEvents = false
+        window.isMovableByWindowBackground = true
+        window.isMovable = true
+        window.hasShadow = true
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.borderWidth = 1
+        window.contentView?.layer?.borderColor = CGColor.black
+        // Causes a fast fade-out (at least at time of writing)
+        window.animationBehavior = .utilityWindow
+    
+        super.init(window: window)
+        
+        if (self.pinToScreen) {
+            window.collectionBehavior = [.managed]
+        } else {
+            window.collectionBehavior = [.canJoinAllSpaces]
+        }
+        
+        window.delegate = self
+        window.copyDelegate = self
+        let menu = NSMenu()
+        
+        let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "")
+        copyItem.keyEquivalentModifierMask = [.command]
+        copyItem.target = self
+        
+        
+        let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)),
+                                                keyEquivalent: "")
+        showItem.state = self.pinToScreen ? .off : .on
+        showItem.target = self
+        self.allDesktopsMenuItem = showItem
+        
+        window.menu = menu
+    }
+    
     func shouldCopy() {
         guard let screenshot = self.screenshot else {
             return
@@ -79,49 +129,6 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         }
     }
     
-    var screenshot: CGImage?
-        
-    init(_ rect: NSRect) {
-        // TODO: when the window's origin changes (i.e. when dragging from top-right
-        //       to bottom-left), the window jitters sliglty.
-        let window = HintWindow(contentRect: rect, styleMask: [.resizable], backing: .buffered, defer: false)
-        window.isOpaque = false
-        window.level = .screenSaver
-        window.backgroundColor = NSColor.blue
-        window.alphaValue = 0.2
-        window.alphaValue = 0.0
-        window.ignoresMouseEvents = false
-        window.isMovableByWindowBackground = true
-        window.isMovable = true
-        window.hasShadow = true
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.borderWidth = 1
-        window.contentView?.layer?.borderColor = CGColor.black
-        // Causes a fast fade-out (at least at time of writing)
-        window.animationBehavior = .utilityWindow
-        
-        // TODO: Make this configurable
-        window.collectionBehavior = [.canJoinAllSpaces]
-
-        super.init(window: window)
-        
-        window.delegate = self
-        window.copyDelegate = self
-        let menu = NSMenu()
-        
-        let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "")
-        copyItem.keyEquivalentModifierMask = [.command]
-        copyItem.target = self
-        
-        
-        let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)),
-                                                keyEquivalent: "")
-        showItem.state = .on
-        showItem.target = self
-        self.allDesktopsMenuItem = showItem
-        
-        window.menu = menu
-    }
     
     override func rightMouseUp(with event: NSEvent) {
         let point = NSEvent.mouseLocation;
