@@ -17,8 +17,8 @@ struct SettingsView: View {
     var body: some View {
         VStack {
             HStack{
-                Text("Settings")
-                    .font(.largeTitle)
+                Text("General")
+                    .font(.title2)
                     .fontWeight(.bold)
                 Spacer()
             }

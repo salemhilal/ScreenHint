@@ -22,6 +22,7 @@
 		C9B09B47263D118900C401E2 /* ScreenHintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B46263D118900C401E2 /* ScreenHintTests.swift */; };
 		C9B09B52263D118900C401E2 /* ScreenHintUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B09B51263D118900C401E2 /* ScreenHintUITests.swift */; };
 		C9B26CA6263DF26F0041B14E /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = C9B26CA5263DF26F0041B14E /* HotKey */; };
+		C9CB6A23267D9A2D007E76A9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CB6A22267D9A2D007E76A9 /* main.swift */; };
 		C9D05715267A664100341620 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D05714267A664100341620 /* SettingsView.swift */; };
 		C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D05718267A75E200341620 /* SettingsWindowController.swift */; };
 /* End PBXBuildFile section */
@@ -80,6 +81,7 @@
 		C9B09B4D263D118900C401E2 /* ScreenHintUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenHintUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9B09B51263D118900C401E2 /* ScreenHintUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenHintUITests.swift; sourceTree = "<group>"; };
 		C9B09B53263D118900C401E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C9CB6A22267D9A2D007E76A9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C9D05714267A664100341620 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C9D05718267A75E200341620 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -174,6 +176,7 @@
 			children = (
 				C9D05717267A75B900341620 /* Settings */,
 				C9D05716267A75AB00341620 /* About */,
+				C9CB6A22267D9A2D007E76A9 /* main.swift */,
 				C9B09B33263D118600C401E2 /* ScreenHintApp.swift */,
 				C90C29D22675BB470049C811 /* HintWindowController.swift */,
 				C90C29D4267672410049C811 /* SecretWindowController.swift */,
@@ -405,6 +408,7 @@
 			files = (
 				C9B09B36263D118600C401E2 /* AboutView.swift in Sources */,
 				C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */,
+				C9CB6A23267D9A2D007E76A9 /* main.swift in Sources */,
 				C90C29D7267672690049C811 /* AboutWindowController.swift in Sources */,
 				C90C29D5267672410049C811 /* SecretWindowController.swift in Sources */,
 				C9D05715267A664100341620 /* SettingsView.swift in Sources */,

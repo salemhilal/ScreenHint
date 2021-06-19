@@ -12,35 +12,7 @@ import Carbon.HIToolbox
 import ServiceManagement
 import os
 
-extension Notification.Name {
-    static let killScreenHintLauncher = Notification.Name("killScreenHintLauncher")
-}
-
-/**
- This is an image view that passes drag events up to its parent window.
- */
-class WindowDraggableImageView: NSImageView {
-    
-    // Without this, you have to focus on the parent window before this view
-    // can be used to drag the window.
-    override var mouseDownCanMoveWindow: Bool {
-        get {
-            return true
-        }
-    }
-    
-    override public func mouseDown(with event: NSEvent) {
-        window?.performDrag(with: event)
-    }
-    
-    override public func mouseDragged(with event: NSEvent) {
-        window?.performDrag(with: event)
-    }
-}
-
-
-
-class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // Status bar item
     var statusBarItem: NSStatusItem!
@@ -285,6 +257,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         guard let settings = self.settings else { return }
         settings.showWindow(nil)
+//        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+
     }
     
     func endCaptureHint() {
@@ -385,15 +359,4 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.keyDownMonitor = nil
     }
     
-}
-
-@main
-struct ScreenHintApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
-    var body: some Scene {
-        Settings {
-            EmptyView()
-        }
-    }
 }

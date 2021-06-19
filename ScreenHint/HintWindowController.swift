@@ -52,6 +52,29 @@ class HintWindow: NSWindow {
     }
 }
 
+
+/**
+ This is an image view that passes drag events up to its parent window.
+ */
+class WindowDraggableImageView: NSImageView {
+    
+    // Without this, you have to focus on the parent window before this view
+    // can be used to drag the window.
+    override var mouseDownCanMoveWindow: Bool {
+        get {
+            return true
+        }
+    }
+    
+    override public func mouseDown(with event: NSEvent) {
+        window?.performDrag(with: event)
+    }
+    
+    override public func mouseDragged(with event: NSEvent) {
+        window?.performDrag(with: event)
+    }
+}
+
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
     
     var allDesktopsMenuItem: NSMenuItem?
