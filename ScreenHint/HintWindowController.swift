@@ -44,9 +44,8 @@ class HintWindow: NSWindow {
     override func mouseUp(with event: NSEvent) {
         // If this window is double-clicked (anywhere), close it.
         if event.clickCount >= 2 {
-            self.orderOut(self)
-            self.windowController?.dismissController(nil)
             // TODO: remove self from rects array
+            self.windowController?.close();
         }
         super.mouseUp(with: event)
     }
@@ -123,6 +122,12 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         showItem.target = self
         self.allDesktopsMenuItem = showItem
         
+        menu.addItem(NSMenuItem.separator())
+        
+        let closeItem = menu.addItem(withTitle: "Close", action: #selector(self.menuCloseHandler(_:)), keyEquivalent: "");
+        closeItem.target = self
+
+        
         window.menu = menu
     }
     
@@ -150,6 +155,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         } else {
             self.window?.collectionBehavior = [.managed]
         }
+    }
+    
+    @objc func menuCloseHandler(_ sender: AnyObject?) {
+        self.close()
     }
     
     

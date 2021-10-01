@@ -36,14 +36,15 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // The ID of our launcher app
     let launcherAppId = "io.salem.ScreenHintLauncher"
     
-    @AppStorage("pinToScreen") private var pinToScreen = false
+    @AppStorage("openAtLogin") private var openAtLogin = false
     @Published var hints: [HintWindowController] = []
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
                 
         // Register our launcher app as a login item
-        // TODO: Make this optional. Don't ship an always-on login item! That's rude.
-        SMLoginItemSetEnabled(self.launcherAppId as CFString, true)
+        if (self.openAtLogin) {
+            SMLoginItemSetEnabled(self.launcherAppId as CFString, true)
+        }
         
         // Ask for recording access if we don't have it
         let hasScreenAccess = CGPreflightScreenCaptureAccess();
@@ -257,8 +258,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         guard let settings = self.settings else { return }
         settings.showWindow(nil)
-//        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-
     }
     
     func endCaptureHint() {
