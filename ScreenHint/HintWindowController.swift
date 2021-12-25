@@ -22,6 +22,25 @@ class HintWindow: NSWindow {
     
     var copyDelegate: CopyDelegate?
     var screenshot: CGImage? = nil
+
+    override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
+        super.init(contentRect:contentRect, styleMask:style, backing:backingStoreType, defer: flag)
+        self.isOpaque = false
+        self.level = .screenSaver
+        self.backgroundColor = NSColor.blue
+        self.alphaValue = 0.2
+        self.alphaValue = 0.0
+        self.ignoresMouseEvents = false
+        self.isMovableByWindowBackground = true
+        self.isMovable = true
+        self.hasShadow = true
+        self.contentView?.wantsLayer = true
+        self.contentView?.layer?.borderWidth = 1
+        self.contentView?.layer?.borderColor = CGColor.black
+        // Causes a fast fade-out (at least at time of writing)
+        self.animationBehavior = .utilityWindow
+
+    }
     
     override var canBecomeKey: Bool {
         get {
@@ -48,6 +67,10 @@ class HintWindow: NSWindow {
             self.windowController?.close();
         }
         super.mouseUp(with: event)
+    }
+    
+    func shouldPinToDesktop(_ shouldPin: Bool) {
+        self.collectionBehavior = shouldPin ? [.managed] : [.canJoinAllSpaces]
     }
 }
 
@@ -84,20 +107,6 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         // TODO: when the window's origin changes (i.e. when dragging from top-right
         //       to bottom-left), the window jitters sliglty.
         let window = HintWindow(contentRect: rect, styleMask: [.resizable], backing: .buffered, defer: false)
-        window.isOpaque = false
-        window.level = .screenSaver
-        window.backgroundColor = NSColor.blue
-        window.alphaValue = 0.2
-        window.alphaValue = 0.0
-        window.ignoresMouseEvents = false
-        window.isMovableByWindowBackground = true
-        window.isMovable = true
-        window.hasShadow = true
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.borderWidth = 1
-        window.contentView?.layer?.borderColor = CGColor.black
-        // Causes a fast fade-out (at least at time of writing)
-        window.animationBehavior = .utilityWindow
     
         super.init(window: window)
         
@@ -150,10 +159,8 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         let newState: NSControl.StateValue = oldState == .on ? .off : .on;
         self.allDesktopsMenuItem?.state = newState;
         
-        if (newState == .on) {
-            self.window?.collectionBehavior = [.canJoinAllSpaces]
-        } else {
-            self.window?.collectionBehavior = [.managed]
+        if let hintWindow = self.window as? HintWindow {
+            hintWindow.shouldPinToDesktop(newState != .on)
         }
     }
     
