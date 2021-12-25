@@ -10,6 +10,7 @@ import AppKit
 import HotKey
 import Carbon.HIToolbox
 import ServiceManagement
+import KeyboardShortcuts
 import os
 
 class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -33,17 +34,19 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var mouseDragMonitor: Any?
     var keyDownMonitor: Any?
     
-    // The ID of our launcher app
-    let launcherAppId = "io.salem.ScreenHintLauncher"
-    
-    @AppStorage("openAtLogin") private var openAtLogin = false
+    // The ID of our launcher app    
+    @AppStorage(AppStorageKeys.openAtLogin) private var openAtLogin = false
     @Published var hints: [HintWindowController] = []
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        UserDefaults.standard.register(defaults: [
+            AppStorageKeys.isFirstLaunch: true,
+        ])
                 
         // Register our launcher app as a login item
         if (self.openAtLogin) {
-            SMLoginItemSetEnabled(self.launcherAppId as CFString, true)
+            SMLoginItemSetEnabled(AppIds.launcher as CFString, true)
         }
         
         // Ask for recording access if we don't have it
@@ -70,16 +73,19 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             // TODO: hide secret window when space is transitioning
         }
         
-        // Set up global hotkey (hardcoded to cmd + shift + 2 for now)
-        // TODO: Make this modifiable
-        let hotKey = HotKey(key: .two, modifiers: [.command, .shift])
-        hotKey.keyDownHandler = {
+        KeyboardShortcuts.onKeyUp(for: .createNewHint) { [self] in
+            // The user pressed the keyboard shortcut for “unicorn mode”!
             self.captureHint(nil)
         }
-        self.hotKey = hotKey
+
+        
         
         // Initialize the status bar menu
         self.createMenu()
+    }
+    
+    deinit {
+        UserDefaults.standard.set(false, forKey:"isFirstLaunch")
     }
     
     /**
@@ -91,7 +97,10 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             swc.close()
         }
         
-        // TODO: Make sure monitors are unbound here
+        // TODO: Make sure monitors are unbound here.
+        // I get wanrnings like this, and I think it's because we're not freeing these
+        // windows here:
+        //  NSWindow has detected an excessive live window count of 101. Window 0x2112 of class 'ScreenHint.SecretWindow' created after passing the threshold of 100. This window is not necessarily the cause.
         self.swcs = []
         
         // make a secret window for each screen. These will
@@ -250,6 +259,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         guard let about = self.about else { return }
         about.showWindow(nil)
+        about.window?.makeKey()
     }
     
     @objc func showSettings(_ sender: AnyObject?) {
@@ -258,6 +268,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         guard let settings = self.settings else { return }
         settings.showWindow(nil)
+        settings.window?.makeKey()
     }
     
     func endCaptureHint() {

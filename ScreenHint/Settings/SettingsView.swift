@@ -7,10 +7,9 @@
 
 import SwiftUI
 import ServiceManagement
+import KeyboardShortcuts
 
-struct SettingsView: View {
-    let launcherAppId = "io.salem.ScreenHintLauncher"
-    
+struct SettingsView: View {    
     @AppStorage("openAtLogin") private var openAtLogin = false
     @AppStorage("pinToScreen") private var pinToScreen = false
     
@@ -26,15 +25,24 @@ struct SettingsView: View {
                 Toggle("Open ScreenHint at login", isOn: $openAtLogin)
                 Toggle("Pin new hints to active desktop", isOn: $pinToScreen)
             }
+            Divider()
+            HStack{
+                Text("Global Shortcut")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+            KeyboardShortcuts.Recorder(for: .createNewHint)
+            
             Spacer()
         }
         .padding(20)
-        .frame(width: 350, height: 130)
+        .frame(width: 350, height: 180)
         .onChange(of: openAtLogin, perform: { shouldOpenAtLogin in
             if (shouldOpenAtLogin) {
-                SMLoginItemSetEnabled(self.launcherAppId as CFString, true)
+                SMLoginItemSetEnabled(AppIds.launcher as CFString, true)
             } else {
-                SMLoginItemSetEnabled(self.launcherAppId as CFString, false)
+                SMLoginItemSetEnabled(AppIds.launcher as CFString, false)
             }
         })
 

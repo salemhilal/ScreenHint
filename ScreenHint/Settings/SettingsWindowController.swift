@@ -12,7 +12,7 @@ import AppKit
 class SettingsWindowController: NSWindowController, NSWindowDelegate {
     init() {
         let width: CGFloat = 350;
-        let height: CGFloat = 130;
+        let height: CGFloat = 180;
         // Unlike in other places, we actually mean the main screen.
         // This window is going to show up wherever the keyboard is focused to,
         // so we want it to render in the center of that.
