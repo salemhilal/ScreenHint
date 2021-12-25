@@ -8,6 +8,7 @@
 import Foundation
 import AppKit
 import SwiftUI
+import Vision
 
 
 protocol CopyDelegate {
@@ -124,6 +125,9 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         copyItem.keyEquivalentModifierMask = [.command]
         copyItem.target = self
         
+        let copyTextItem = menu.addItem(withTitle: "Copy Text", action:#selector(self.menuCopyTextHandler(_:)), keyEquivalent: "")
+        copyTextItem.keyEquivalentModifierMask = [.command]
+        copyTextItem.target = self
         
         let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)),
                                                 keyEquivalent: "")
@@ -148,6 +152,41 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         let image = NSImage.init(cgImage: screenshot, size: self.window!.frame.size)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.writeObjects([image])
+    }
+    
+    func shouldCopyText() {
+        guard let cgImage = self.screenshot else { return }
+        let requestHandler = VNImageRequestHandler(cgImage: cgImage)
+        let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        do {
+            try requestHandler.perform([request])
+        } catch {
+            print("Unable to perform the requests: \(error).")
+        }
+    }
+    
+    func recognizeTextHandler(request: VNRequest, error: Error?) {
+        guard let observations =
+                request.results as? [VNRecognizedTextObservation] else {
+            return
+        }
+        let recognizedStrings = observations.compactMap { observation in
+            // Return the string of the top VNRecognizedText instance.
+            return observation.topCandidates(1).first?.string
+        }
+        
+        // Process the recognized strings.
+        print(recognizedStrings)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(recognizedStrings.joined(separator: "\n"), forType: .string)
+
+    }
+
+    
+    @objc func menuCopyTextHandler(_ sender: AnyObject?) {
+        self.shouldCopyText()
     }
     
     @objc func menuCopyHandler(_ sender: AnyObject?) {
