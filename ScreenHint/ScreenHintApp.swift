@@ -148,9 +148,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let newHintItem = menu.addItem(
             withTitle: "New Hint",
             action: #selector(captureHint(_:)),
-            keyEquivalent: "2"
+            keyEquivalent: ""
         )
-        newHintItem.keyEquivalentModifierMask = [.command, .shift]
         newHintItem.image = NSImage(systemSymbolName: "rectangle.dashed", accessibilityDescription: nil)
         
         let clearHintItem = menu.addItem(

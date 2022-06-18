@@ -167,6 +167,29 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         window.menu = menu
     }
     
+    // --- Handlers ---
+    
+    @objc func menuCopyTextHandler(_ sender: AnyObject?) {
+        self.shouldCopyText()
+    }
+    
+    @objc func menuCopyHandler(_ sender: AnyObject?) {
+        self.shouldCopy()
+    }
+                                              
+    @objc func borderlessModeHandler(_ sender: AnyObject?) {
+        self.shouldToggleBorderlessMode()
+    }
+    
+    @objc func menuShowOnAllDesktopsHandler(_ sender: AnyObject?) {
+        self.shouldToggleAllDesktops()
+    }
+    
+    @objc func menuCloseHandler(_ sender: AnyObject?) {
+        self.close()
+    }
+    
+    
     func shouldToggleBorderlessMode() {
         self.isBorderless = !self.isBorderless
         self.hintWindow.setBorderlessMode(self.isBorderless)
@@ -181,6 +204,16 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         let image = NSImage.init(cgImage: screenshot, size: self.window!.frame.size)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.writeObjects([image])
+    }
+    
+    func shouldToggleAllDesktops() {
+        let oldState = self.allDesktopsMenuItem?.state;
+        let newState: NSControl.StateValue = oldState == .on ? .off : .on;
+        self.allDesktopsMenuItem?.state = newState;
+        
+        if let hintWindow = self.window as? HintWindow {
+            hintWindow.shouldPinToDesktop(newState != .on)
+        }
     }
     
     func shouldCopyText() {
@@ -213,34 +246,6 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
 
     }
 
-    
-    @objc func menuCopyTextHandler(_ sender: AnyObject?) {
-        self.shouldCopyText()
-    }
-    
-    @objc func menuCopyHandler(_ sender: AnyObject?) {
-        self.shouldCopy()
-    }
-                                              
-    @objc func borderlessModeHandler(_ sender: AnyObject?) {
-        self.shouldToggleBorderlessMode()
-    }
-    
-    @objc func menuShowOnAllDesktopsHandler(_ sender: AnyObject?) {
-        let oldState = self.allDesktopsMenuItem?.state;
-        let newState: NSControl.StateValue = oldState == .on ? .off : .on;
-        self.allDesktopsMenuItem?.state = newState;
-        
-        if let hintWindow = self.window as? HintWindow {
-            hintWindow.shouldPinToDesktop(newState != .on)
-        }
-    }
-    
-    @objc func menuCloseHandler(_ sender: AnyObject?) {
-        self.close()
-    }
-    
-    
     override func rightMouseUp(with event: NSEvent) {
         let point = NSEvent.mouseLocation;
         self.window!.menu?.popUp(positioning: nil, at: point, in: nil)
@@ -250,6 +255,9 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         self.window?.setFrame(rect, display: true, animate: false)
     }
     
+    /**
+     Take a screenshot of the area under the hint window.
+     */
     func finishDragging() {
         // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
         // but that's not true for the rect passed to CGWindowListCreateImage
@@ -284,11 +292,16 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
                                                      kCGNullWindowID,
                                                      CGWindowImageOption.bestResolution)!
             
+            // Make an image and an imageview to put the screenshot in
             let image = NSImage(cgImage:screenshot, size: .zero)
+            image.resizingMode = .stretch
             let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
             imageView.image = image
-            // Make sure the image fills the window
+            
+            // Make sure the imageView fills the window
             imageView.autoresizingMask = [.height, .width]
+            // and that it will scale larger than its original size
+            imageView.imageScaling = .scaleProportionallyUpOrDown
             
             self.window?.alphaValue = 1.0
             self.window?.level = .floating
