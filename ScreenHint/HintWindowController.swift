@@ -73,6 +73,16 @@ class HintWindow: NSWindow {
     func shouldPinToDesktop(_ shouldPin: Bool) {
         self.collectionBehavior = shouldPin ? [.managed] : [.canJoinAllSpaces]
     }
+    
+    func setBorderlessMode(_ isEnabled: Bool) {
+        if isEnabled {
+            self.hasShadow = false
+            self.contentView?.layer?.borderWidth = 0
+        } else {
+            self.hasShadow = true
+            self.contentView?.layer?.borderWidth = 1
+        }
+    }
 }
 
 
@@ -100,15 +110,19 @@ class WindowDraggableImageView: NSImageView {
 
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
     
-    var allDesktopsMenuItem: NSMenuItem?
+    var hintWindow: HintWindow
     var screenshot: CGImage?
+    
+    var allDesktopsMenuItem: NSMenuItem?
+    var borderlessModeMenuItem: NSMenuItem?
+    
     @AppStorage("pinToScreen") private var pinToScreen = false
+    var isBorderless = false
         
     init(_ rect: NSRect) {
-        // TODO: when the window's origin changes (i.e. when dragging from top-right
-        //       to bottom-left), the window jitters sliglty.
         let window = HintWindow(contentRect: rect, styleMask: [.resizable], backing: .buffered, defer: false)
     
+        self.hintWindow = window
         super.init(window: window)
         
         if (self.pinToScreen) {
@@ -116,6 +130,8 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         } else {
             window.collectionBehavior = [.canJoinAllSpaces]
         }
+        
+        window.setBorderlessMode(self.isBorderless)
         
         window.delegate = self
         window.copyDelegate = self
@@ -129,6 +145,13 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         copyTextItem.keyEquivalentModifierMask = [.command]
         copyTextItem.target = self
         
+        let borderlessModeItem = menu.addItem(withTitle: "Borderless Mode", action:#selector(self.borderlessModeHandler(_:)), keyEquivalent: "")
+        borderlessModeItem.keyEquivalentModifierMask = [.command]
+        borderlessModeItem.target = self
+        borderlessModeItem.state = self.isBorderless ? .on : .off
+        self.borderlessModeMenuItem = borderlessModeItem
+
+                                              
         let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)),
                                                 keyEquivalent: "")
         showItem.state = self.pinToScreen ? .off : .on
@@ -142,6 +165,12 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
 
         
         window.menu = menu
+    }
+    
+    func shouldToggleBorderlessMode() {
+        self.isBorderless = !self.isBorderless
+        self.hintWindow.setBorderlessMode(self.isBorderless)
+        self.borderlessModeMenuItem?.state = self.isBorderless ? .on : .off
     }
     
     func shouldCopy() {
@@ -191,6 +220,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     
     @objc func menuCopyHandler(_ sender: AnyObject?) {
         self.shouldCopy()
+    }
+                                              
+    @objc func borderlessModeHandler(_ sender: AnyObject?) {
+        self.shouldToggleBorderlessMode()
     }
     
     @objc func menuShowOnAllDesktopsHandler(_ sender: AnyObject?) {
