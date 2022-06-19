@@ -27,6 +27,7 @@
 		C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D05718267A75E200341620 /* SettingsWindowController.swift */; };
 		FC4651422776ABC300901D6F /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FC4651412776ABC300901D6F /* KeyboardShortcuts */; };
 		FC4651442776ABE000901D6F /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4651432776ABE000901D6F /* Constants.swift */; };
+		FCF1C49E285E5D1600A87813 /* HintWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF1C49D285E5D1600A87813 /* HintWindow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +88,7 @@
 		C9D05714267A664100341620 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C9D05718267A75E200341620 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		FC4651432776ABE000901D6F /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		FCF1C49D285E5D1600A87813 /* HintWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintWindow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -182,6 +184,7 @@
 				C9D05716267A75AB00341620 /* About */,
 				C9CB6A22267D9A2D007E76A9 /* main.swift */,
 				C9B09B33263D118600C401E2 /* ScreenHintApp.swift */,
+				FCF1C49D285E5D1600A87813 /* HintWindow.swift */,
 				C90C29D22675BB470049C811 /* HintWindowController.swift */,
 				C90C29D4267672410049C811 /* SecretWindowController.swift */,
 				C9B09B37263D118900C401E2 /* Assets.xcassets */,
@@ -413,6 +416,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCF1C49E285E5D1600A87813 /* HintWindow.swift in Sources */,
 				C9B09B36263D118600C401E2 /* AboutView.swift in Sources */,
 				C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */,
 				C9CB6A23267D9A2D007E76A9 /* main.swift in Sources */,

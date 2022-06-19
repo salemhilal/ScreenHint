@@ -316,7 +316,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let newHint = HintWindowController(rect);
                 newHint.showWindow(nil)
 
-                newHint.setRect(rect)
                 newHint.finishDragging()
                 self.hints.append(newHint)
                 

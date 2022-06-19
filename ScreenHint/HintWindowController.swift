@@ -11,112 +11,20 @@ import SwiftUI
 import Vision
 
 
-protocol CopyDelegate {
-    func shouldCopy();
-}
-
-
-/**
- This is a window that closes when you doubleclick it.
- */
-class HintWindow: NSWindow {
-    
-    var copyDelegate: CopyDelegate?
-    var screenshot: CGImage? = nil
-
-    override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
-        super.init(contentRect:contentRect, styleMask:style, backing:backingStoreType, defer: flag)
-        self.isOpaque = false
-        self.level = .screenSaver
-        self.backgroundColor = NSColor.blue
-        self.alphaValue = 0.2
-        self.alphaValue = 0.0
-        self.ignoresMouseEvents = false
-        self.isMovableByWindowBackground = true
-        self.isMovable = true
-        self.hasShadow = true
-        self.contentView?.wantsLayer = true
-        self.contentView?.layer?.borderWidth = 1
-        self.contentView?.layer?.borderColor = CGColor.black
-        // Causes a fast fade-out (at least at time of writing)
-        self.animationBehavior = .utilityWindow
-
-    }
-    
-    override var canBecomeKey: Bool {
-        get {
-            return true
-        }
-    }
-    
-    override var canBecomeMain: Bool {
-        get {
-            return false
-        }
-    }
-    
-    override func keyDown(with event: NSEvent) {
-        if (event.charactersIgnoringModifiers == "c" && event.modifierFlags.contains(.command)) {
-            self.copyDelegate?.shouldCopy()
-        }
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        // If this window is double-clicked (anywhere), close it.
-        if event.clickCount >= 2 {
-            // TODO: remove self from rects array
-            self.windowController?.close();
-        }
-        super.mouseUp(with: event)
-    }
-    
-    func shouldPinToDesktop(_ shouldPin: Bool) {
-        self.collectionBehavior = shouldPin ? [.managed] : [.canJoinAllSpaces]
-    }
-    
-    func setBorderlessMode(_ isEnabled: Bool) {
-        if isEnabled {
-            self.hasShadow = false
-            self.contentView?.layer?.borderWidth = 0
-        } else {
-            self.hasShadow = true
-            self.contentView?.layer?.borderWidth = 1
-        }
-    }
-}
-
-
-/**
- This is an image view that passes drag events up to its parent window.
- */
-class WindowDraggableImageView: NSImageView {
-    
-    // Without this, you have to focus on the parent window before this view
-    // can be used to drag the window.
-    override var mouseDownCanMoveWindow: Bool {
-        get {
-            return true
-        }
-    }
-    
-    override public func mouseDown(with event: NSEvent) {
-        window?.performDrag(with: event)
-    }
-    
-    override public func mouseDragged(with event: NSEvent) {
-        window?.performDrag(with: event)
-    }
-}
 
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
     
     var hintWindow: HintWindow
     var screenshot: CGImage?
     
+    // Menu items we need to hold a reference to (they need to have their checkmark state changed depending
+    // on the state of the hint)
     var allDesktopsMenuItem: NSMenuItem?
     var borderlessModeMenuItem: NSMenuItem?
     
-    @AppStorage("pinToScreen") private var pinToScreen = false
+    // Hint state
+    @AppStorage("pinToScreen") private var defaultPinToDesktop = false
+    var pinToDesktop = false
     var isBorderless = false
         
     init(_ rect: NSRect) {
@@ -125,16 +33,21 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         self.hintWindow = window
         super.init(window: window)
         
-        if (self.pinToScreen) {
+        // TODO: use instance method to initialize this
+        self.pinToDesktop = defaultPinToDesktop;
+        if (self.pinToDesktop) {
             window.collectionBehavior = [.managed]
         } else {
             window.collectionBehavior = [.canJoinAllSpaces]
         }
         
-        window.setBorderlessMode(self.isBorderless)
+        self.shouldSetBorderlessMode(self.isBorderless);
         
         window.delegate = self
         window.copyDelegate = self
+        
+        // Initialize the menu
+        // TODO: put this in its own method
         let menu = NSMenu()
         
         let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "")
@@ -154,7 +67,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
                                               
         let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)),
                                                 keyEquivalent: "")
-        showItem.state = self.pinToScreen ? .off : .on
+        showItem.state = self.pinToDesktop ? .off : .on
         showItem.target = self
         self.allDesktopsMenuItem = showItem
         
@@ -167,7 +80,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         window.menu = menu
     }
     
+    //
     // --- Handlers ---
+    //
+    
     
     @objc func menuCopyTextHandler(_ sender: AnyObject?) {
         self.shouldCopyText()
@@ -178,24 +94,34 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     }
                                               
     @objc func borderlessModeHandler(_ sender: AnyObject?) {
-        self.shouldToggleBorderlessMode()
+        self.shouldSetBorderlessMode(!self.isBorderless)
     }
     
     @objc func menuShowOnAllDesktopsHandler(_ sender: AnyObject?) {
-        self.shouldToggleAllDesktops()
+        self.shouldPinToDesktop(!self.pinToDesktop)
     }
     
     @objc func menuCloseHandler(_ sender: AnyObject?) {
         self.close()
     }
     
+    //
+    // --- Instance methods
+    //
     
-    func shouldToggleBorderlessMode() {
-        self.isBorderless = !self.isBorderless
-        self.hintWindow.setBorderlessMode(self.isBorderless)
+    
+    /**
+     Sets whether or not the hint is in borderless mode (border and drop shadow are both hidden).
+     */
+    func shouldSetBorderlessMode(_ isBorderless: Bool) {
+        self.isBorderless = isBorderless
+        self.hintWindow.setBorderlessMode(isBorderless)
         self.borderlessModeMenuItem?.state = self.isBorderless ? .on : .off
     }
     
+    /**
+     Copies the current screenshot to the clipboard.
+     */
     func shouldCopy() {
         guard let screenshot = self.screenshot else {
             return
@@ -206,20 +132,23 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         NSPasteboard.general.writeObjects([image])
     }
     
-    func shouldToggleAllDesktops() {
-        let oldState = self.allDesktopsMenuItem?.state;
-        let newState: NSControl.StateValue = oldState == .on ? .off : .on;
+    /**
+     Sets whether or not this hint should be pinned to the current desktop or not.
+     */
+    func shouldPinToDesktop(_ shouldPinToDesktop: Bool) {
+        self.pinToDesktop = shouldPinToDesktop
+        let newState: NSControl.StateValue = shouldPinToDesktop ? .on : .off;
         self.allDesktopsMenuItem?.state = newState;
-        
-        if let hintWindow = self.window as? HintWindow {
-            hintWindow.shouldPinToDesktop(newState != .on)
-        }
+        self.hintWindow.shouldPinToDesktop(shouldPinToDesktop)
     }
     
+    /**
+     Attempts to extract text from the current screenshot and then copies it to the clipboard (in `handleRecognizeText`).
+     */
     func shouldCopyText() {
         guard let cgImage = self.screenshot else { return }
         let requestHandler = VNImageRequestHandler(cgImage: cgImage)
-        let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
+        let request = VNRecognizeTextRequest(completionHandler: handleRecognizeText)
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
         do {
@@ -229,7 +158,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         }
     }
     
-    func recognizeTextHandler(request: VNRequest, error: Error?) {
+    /**
+     Callback for VisionKit's text recognition process.
+     */
+    func handleRecognizeText(request: VNRequest, error: Error?) {
         guard let observations =
                 request.results as? [VNRecognizedTextObservation] else {
             return
@@ -249,10 +181,6 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     override func rightMouseUp(with event: NSEvent) {
         let point = NSEvent.mouseLocation;
         self.window!.menu?.popUp(positioning: nil, at: point, in: nil)
-    }
-    
-    func setRect(_ rect: NSRect) {
-        self.window?.setFrame(rect, display: true, animate: false)
     }
     
     /**
