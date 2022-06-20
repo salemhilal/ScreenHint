@@ -21,6 +21,7 @@ A screenshotting tool for thinking clearly.
 	- On the "Version Information" screen, enter release notes in the "What's New in This Version" field.
 	- Under the "Build" section, select the "+" button and select the version you just uploaded. Walk through any questions about encryption.
 	- At the top of the page, select "Save" and then "Add for Review".
+	- Select "Submit for Review" to actually submit your app to the Apple review process.
 
 
 
