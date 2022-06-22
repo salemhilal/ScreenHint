@@ -25,3 +25,6 @@ A screenshotting tool for thinking clearly.
 
 
 
+ScreenHint © 2021 by [Salem Hilal](https://salem.io)
+
+
