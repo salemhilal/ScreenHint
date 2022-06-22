@@ -212,31 +212,28 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         window.alphaValue = 0.0
         window.backgroundColor = NSColor.clear
         
-        // Wait a split second for the hint's blue background to be removed
-        // before taking the screenshot
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let screenshot = CGWindowListCreateImage(screenshotRect,
-                                                     CGWindowListOption.optionAll,
-                                                     kCGNullWindowID,
-                                                     CGWindowImageOption.bestResolution)!
-            
-            // Make an image and an imageview to put the screenshot in
-            let image = NSImage(cgImage:screenshot, size: .zero)
-            image.resizingMode = .stretch
-            let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
-            imageView.image = image
-            
-            // Make sure the imageView fills the window
-            imageView.autoresizingMask = [.height, .width]
-            // and that it will scale larger than its original size
-            imageView.imageScaling = .scaleProportionallyUpOrDown
-            
-            self.window?.alphaValue = 1.0
-            self.window?.level = .floating
-            self.window?.isOpaque = true
-            self.window?.contentView?.addSubview(imageView)
-            self.screenshot = screenshot
-        }
+        // Take the screenshot
+        let screenshot = CGWindowListCreateImage(screenshotRect,
+                                                 CGWindowListOption.optionAll,
+                                                 kCGNullWindowID,
+                                                 CGWindowImageOption.bestResolution)!
+        
+        // Make an image and an imageview to put the screenshot in
+        let image = NSImage(cgImage:screenshot, size: .zero)
+        image.resizingMode = .stretch
+        let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
+        imageView.image = image
+        
+        // Make sure the imageView fills the window
+        imageView.autoresizingMask = [.height, .width]
+        // and that it will scale larger than its original size
+        imageView.imageScaling = .scaleProportionallyUpOrDown
+        
+        self.window?.alphaValue = 1.0
+        self.window?.level = .floating
+        self.window?.isOpaque = true
+        self.window?.contentView?.addSubview(imageView)
+        self.screenshot = screenshot
     }
     
     required init?(coder: NSCoder) {

@@ -25,15 +25,22 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
     
     init(_ screen: NSScreen) {
         let secretWindow = SecretWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
+        
+        // Make sure we can see through it
         secretWindow.backgroundColor = NSColor.blue
         secretWindow.isOpaque = false
         secretWindow.alphaValue = 0.2
+        
+        // Make sure it's above everything and captures mouse movement
         secretWindow.level = .screenSaver
         secretWindow.ignoresMouseEvents = false
         secretWindow.isMovable = false
         secretWindow.collectionBehavior = [.stationary, .transient, .canJoinAllSpaces]
         
+        // Make sure this window doesn't make it into the screenshots we take.
+        secretWindow.sharingType = .none
         
+        // Draw the portion of the screen we're gonna be highlighting.
         let highlightRect = NSView.init(frame: CGRect.zero)
         highlightRect.isHidden = true;
         highlightRect.wantsLayer = true
@@ -41,12 +48,15 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
         highlightRect.layer?.opacity = 0.5
         highlightRect.layer?.borderWidth = 1.0
         highlightRect.layer?.borderColor = CGColor.black
+        
+        // Add the view to the window
         secretWindow.contentView?.addSubview(highlightRect)
+        
+        // Keep a reference to the highlight rect
         self.highlightRect = highlightRect;
+        
         super.init(window: secretWindow)
         secretWindow.delegate = self
-
-        
     }
     
     func isPointInWindowScreen(_ point: CGPoint) -> Bool {
