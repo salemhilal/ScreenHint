@@ -77,7 +77,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         saveAsItem.target = self;
         
         let openInPreviewItem = menu.addItem(withTitle: "Open in Default App", action:#selector(self.menuOpenWithPreviewHandler(_:)), keyEquivalent: "")
-        saveAsItem.target = self;
+        openInPreviewItem.target = self;
         
         menu.addItem(NSMenuItem.separator())
         
@@ -214,7 +214,6 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         }
         
         // Try to open the file locally with the default app
-        let previewURL = URL(fileURLWithPath: "/Applications/Preview.app")
         NSWorkspace.shared.open(temporaryFileURL)
     }
     
