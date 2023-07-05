@@ -71,7 +71,12 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         showItem.target = self
         self.allDesktopsMenuItem = showItem
         
+        menu.addItem(NSMenuItem.separator())
+        
         let saveAsItem = menu.addItem(withTitle: "Save As...", action:#selector(self.menuSaveAsHandler(_:)), keyEquivalent: "")
+        saveAsItem.target = self;
+        
+        let openInPreviewItem = menu.addItem(withTitle: "Open in Default App", action:#selector(self.menuOpenWithPreviewHandler(_:)), keyEquivalent: "")
         saveAsItem.target = self;
         
         menu.addItem(NSMenuItem.separator())
@@ -110,6 +115,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     
     @objc func menuSaveAsHandler(_ sender: AnyObject?) {
         self.shouldSaveImage();
+    }
+    
+    @objc func menuOpenWithPreviewHandler(_ sender: AnyObject?) {
+        self.shouldOpenImageInPreview()
     }
     
     //
@@ -189,13 +198,26 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
                 CGImageDestinationFinalize(dest)
             }
         })
-
     }
     
-    func saveImage(response: NSApplication.ModalResponse) {
+    func shouldOpenImageInPreview() {
         guard let image = self.screenshot else { return }
+        let nsImage = NSImage(cgImage: image, size: NSZeroSize)
+        guard let tiffData = nsImage.tiffRepresentation else { return }
+        let temporaryFileURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("temp_image.tiff")
 
+        do {
+            try tiffData.write(to: temporaryFileURL)
+        } catch {
+            // Handle error if write fails
+            return
+        }
+        
+        // Try to open the file locally with the default app
+        let previewURL = URL(fileURLWithPath: "/Applications/Preview.app")
+        NSWorkspace.shared.open(temporaryFileURL)
     }
+    
     
     /**
      Callback for VisionKit's text recognition process.
