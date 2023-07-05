@@ -58,7 +58,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         copyTextItem.keyEquivalentModifierMask = [.command]
         copyTextItem.target = self
         
-        let borderlessModeItem = menu.addItem(withTitle: "Borderless Mode", action:#selector(self.borderlessModeHandler(_:)), keyEquivalent: "")
+        let borderlessModeItem = menu.addItem(withTitle: "Borderless Mode", action:#selector(self.borderlessModeHandler(_:)), keyEquivalent: "B")
         borderlessModeItem.keyEquivalentModifierMask = [.command]
         borderlessModeItem.target = self
         borderlessModeItem.state = self.isBorderless ? .on : .off
@@ -70,6 +70,9 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         showItem.state = self.pinToDesktop ? .off : .on
         showItem.target = self
         self.allDesktopsMenuItem = showItem
+        
+        let saveAsItem = menu.addItem(withTitle: "Save As...", action:#selector(self.menuSaveAsHandler(_:)), keyEquivalent: "")
+        saveAsItem.target = self;
         
         menu.addItem(NSMenuItem.separator())
         
@@ -103,6 +106,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     
     @objc func menuCloseHandler(_ sender: AnyObject?) {
         self.close()
+    }
+    
+    @objc func menuSaveAsHandler(_ sender: AnyObject?) {
+        self.shouldSaveImage();
     }
     
     //
@@ -156,6 +163,38 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         } catch {
             print("Unable to perform the requests: \(error).")
         }
+    }
+    
+    /**
+     Allow the user to save the screenshot to disk
+     */
+    func shouldSaveImage() {
+        guard let image = self.screenshot else { return }
+        let savePanel = NSSavePanel()
+        savePanel.allowedFileTypes = ["png"]
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .medium
+        let time =  formatter.string(from: Date())
+        savePanel.nameFieldStringValue = "ScreenHint - \(time)"
+
+        
+        savePanel.begin(completionHandler: { (result) in
+            if result == .OK, let url = savePanel.url {
+                guard let dest = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) else {
+                    return
+                }
+                CGImageDestinationAddImage(dest, image, nil)
+                CGImageDestinationFinalize(dest)
+            }
+        })
+
+    }
+    
+    func saveImage(response: NSApplication.ModalResponse) {
+        guard let image = self.screenshot else { return }
+
     }
     
     /**

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "B950FCFE-9CCC-4238-8D70-655DFF10E554"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4BECB400-EF59-45F5-88C5-C2F235562A9B"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ScreenHint/HintWindowController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "184"
+            endingLineNumber = "184"
+            landmarkName = "shouldSaveImage()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "4BECB400-EF59-45F5-88C5-C2F235562A9B - c884d4295833701c"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ScreenHint.HintWindowController.shouldSaveImage() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "184"
+                  endingLineNumber = "184"
+                  offsetFromSymbolStart = "1076">
+               </Location>
+               <Location
+                  uuid = "4BECB400-EF59-45F5-88C5-C2F235562A9B - 8dc13c530b32bbc3"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (__C.NSModalResponse) -&gt; () in ScreenHint.HintWindowController.shouldSaveImage() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "185"
+                  endingLineNumber = "185"
+                  offsetFromSymbolStart = "292">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>
