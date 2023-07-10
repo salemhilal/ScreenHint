@@ -47,8 +47,6 @@ class HintWindow: NSWindow {
         get { return false }
     }
     
-    // TODO: Add a keyboard shortcut to pull up the context menu
-    
     /**
      Handle keyboard shortcuts
      */

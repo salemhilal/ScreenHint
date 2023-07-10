@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		C90C29D32675BB470049C811 /* HintWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D22675BB470049C811 /* HintWindowController.swift */; };
 		C90C29D5267672410049C811 /* SecretWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D4267672410049C811 /* SecretWindowController.swift */; };
-		C90C29D7267672690049C811 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C29D6267672690049C811 /* AboutWindowController.swift */; };
 		C9247BAE26779F830095BA5B /* ScreenHintLauncherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9247BAD26779F830095BA5B /* ScreenHintLauncherApp.swift */; };
 		C9247BB526779F870095BA5B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9247BB426779F870095BA5B /* Preview Assets.xcassets */; };
 		C9247BBC2677A1960095BA5B /* ScreenHintLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C9247BAB26779F830095BA5B /* ScreenHintLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -65,7 +64,6 @@
 /* Begin PBXFileReference section */
 		C90C29D22675BB470049C811 /* HintWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintWindowController.swift; sourceTree = "<group>"; };
 		C90C29D4267672410049C811 /* SecretWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretWindowController.swift; sourceTree = "<group>"; };
-		C90C29D6267672690049C811 /* AboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
 		C9247BAB26779F830095BA5B /* ScreenHintLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenHintLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9247BAD26779F830095BA5B /* ScreenHintLauncherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenHintLauncherApp.swift; sourceTree = "<group>"; };
 		C9247BB426779F870095BA5B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -231,7 +229,6 @@
 			isa = PBXGroup;
 			children = (
 				C9B09B35263D118600C401E2 /* AboutView.swift */,
-				C90C29D6267672690049C811 /* AboutWindowController.swift */,
 			);
 			path = About;
 			sourceTree = "<group>";
@@ -428,7 +425,6 @@
 				C9B09B36263D118600C401E2 /* AboutView.swift in Sources */,
 				C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */,
 				C9CB6A23267D9A2D007E76A9 /* main.swift in Sources */,
-				C90C29D7267672690049C811 /* AboutWindowController.swift in Sources */,
 				C90C29D5267672410049C811 /* SecretWindowController.swift in Sources */,
 				C9D05715267A664100341620 /* SettingsView.swift in Sources */,
 				C90C29D32675BB470049C811 /* HintWindowController.swift in Sources */,

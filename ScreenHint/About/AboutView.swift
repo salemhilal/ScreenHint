@@ -17,10 +17,16 @@ struct AboutView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .padding([.bottom, .horizontal])
-            Text("Version \(self.version) (Build \(self.build))")
-            Link("Need help?", destination: URL(string: "mailto:screenhint@salem.io")!)
+            Text("""
+                Copyright ©2021 Salem Hilal
+                Version \(self.version) (Build \(self.build))
+                
+                
+                Need help? [Email us](mailto:screenhint@salem.io) or [message us on Twitter](https://twitter.com/screenhint).
+                """).multilineTextAlignment(.center)
 
         }.padding()
+            .frame(width:330, height: 250)
         
     }
 }

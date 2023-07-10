@@ -20,7 +20,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // ViewControllers
     var swcs: [SecretWindowController] = []
-    var about: AboutWindowController?
     var settings: SettingsWindowController?
     
     
@@ -74,6 +73,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                                object: NSApplication.shared,
                                                queue: OperationQueue.main) {
             notification -> Void in
+            // TODO: Don't do this, just make secret windows when someone presses the shortcut. this seems to be called all the time.
             self.generateSecretWindows()
         }
         
@@ -307,12 +307,35 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     
     @objc func showAbout(_ sender: AnyObject?) {
-        if (self.about == nil) {
-            self.about = AboutWindowController.init()
+        let vc = NSHostingController(rootView: AboutView())
+        let window = NSWindow(contentViewController: vc)
+        
+        // Translucent window effect time wooo
+        let visualEffect = NSVisualEffectView() // Effects are a view...
+        visualEffect.blendingMode = .behindWindow
+        visualEffect.state = .active
+        visualEffect.material = .underWindowBackground
+        // ...which means we need to insert them into the view hierarchy
+        if let subview = window.contentView {
+            visualEffect.addSubview(subview)
         }
-        guard let about = self.about else { return }
-        about.showWindow(nil)
-        about.window?.makeKey()
+        window.contentView = visualEffect
+        
+        // we also need to enable "full size content view" and disable resizing
+        window.styleMask.insert(.fullSizeContentView)
+        window.styleMask.remove(.resizable)
+        
+        // Hide the window's title and title bar
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.level = .floating
+        
+        // Hide everything but the close button
+        window.standardWindowButton(.zoomButton)?.isHidden = true
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+
+        // Show the window
+        window.makeKeyAndOrderFront(nil)
     }
     
     @objc func showSettings(_ sender: AnyObject?) {
