@@ -321,7 +321,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func endCaptureHint() {
         self.removeMonitors()
         self.swcs.forEach({(secretWindow) in
-            secretWindow.setActive(false);
             secretWindow.setHighlightRect(nil);
             secretWindow.close()
         })
@@ -345,10 +344,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 
                 self.swcs.forEach({(secretWindow) in
                     if secretWindow.isPointInWindowScreen(self.dragStart) {
-                        secretWindow.setActive(true);
                         secretWindow.setHighlightRect(rect);
                     } else {
-                        secretWindow.setActive(false);
                         secretWindow.setHighlightRect(nil);
                     }
                 })

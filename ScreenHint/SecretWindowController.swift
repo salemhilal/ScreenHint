@@ -27,9 +27,9 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
         let secretWindow = SecretWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
         
         // Make sure we can see through it
-        secretWindow.backgroundColor = NSColor.blue
+        secretWindow.backgroundColor = NSColor.systemBlue
         secretWindow.isOpaque = false
-        secretWindow.alphaValue = 0.2
+        secretWindow.alphaValue = 0.4
         
         // Make sure it's above everything and captures mouse movement
         secretWindow.level = .screenSaver
@@ -45,7 +45,7 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
         highlightRect.isHidden = true;
         highlightRect.wantsLayer = true
         highlightRect.layer?.backgroundColor = CGColor.white
-        highlightRect.layer?.opacity = 0.5
+        highlightRect.layer?.opacity = 0.8
         highlightRect.layer?.borderWidth = 1.0
         highlightRect.layer?.borderColor = CGColor.black
         
@@ -71,10 +71,6 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
             frame.maxY >= point.y
         
         return isInScreen
-    }
-    
-    func setActive(_ isActive: Bool) {
-        self.window?.alphaValue = isActive ? 0.1 : 0.2
     }
     
     func setHighlightRect(_ rect: CGRect?) {
