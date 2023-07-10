@@ -150,8 +150,8 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         if (self.isBorderless) { return }
         
         // Otherwise, bolden the border when the window becomes key.
-        self.hintWindow.contentView?.layer?.borderColor = CGColor.black
-        self.hintWindow.contentView?.layer?.borderWidth = 1
+        self.animateBorderColor(for: self.hintWindow, to: CGColor.black)
+
     }
     
     func windowDidResignKey(_ notification: Notification) {
@@ -159,8 +159,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         if (self.isBorderless) { return }
         
         // Otherwise, reset the border when it resigns key
-        self.hintWindow.contentView?.layer?.borderColor = CGColor.init(gray: 1.0, alpha: 0.1)
-        self.hintWindow.contentView?.layer?.borderWidth = 1
+        self.animateBorderColor(for: self.hintWindow, to: CGColor.init(gray: 1.0, alpha: 0.1))
     }
 
     
@@ -168,6 +167,22 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     // --- Instance methods
     //
     
+    
+    /**
+     A utility to animate the border color of a window
+     */
+    private func animateBorderColor(for window: NSWindow, to color: CGColor, duration: CFTimeInterval = 0.15) {
+        guard let layer = window.contentView?.layer else { return }
+
+        let colorAnimation = CABasicAnimation(keyPath: "borderColor")
+        colorAnimation.fromValue = layer.borderColor
+        colorAnimation.toValue = color
+        colorAnimation.duration = duration
+        layer.borderColor = color
+
+        layer.add(colorAnimation, forKey: "borderColorAnimation")
+    }
+
     
     /**
      Sets whether or not the hint is in borderless mode (border and drop shadow are both hidden).
