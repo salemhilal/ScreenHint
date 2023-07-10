@@ -31,15 +31,16 @@ struct SettingsView: View {
             
             HStack{
                 Text("Global Shortcut")
-
                     .font(.system(.title2, design: .rounded ))
                     .fontWeight(.semibold)
                 Spacer()
             }
-            KeyboardShortcuts.Recorder(for: .createNewHint)
+            Form {
+                KeyboardShortcuts.Recorder(for: .createNewHint)
+            }
         }
-        .padding()
-        .frame(minWidth: 350, minHeight: 220)
+        .padding(.horizontal)
+        .frame(width: 350, height: 250)
         .onChange(of: openAtLogin, perform: { shouldOpenAtLogin in
             if (shouldOpenAtLogin) {
                 SMLoginItemSetEnabled(AppIds.launcher as CFString, true)
