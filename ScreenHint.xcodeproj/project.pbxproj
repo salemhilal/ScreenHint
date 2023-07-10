@@ -27,6 +27,8 @@
 		C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D05718267A75E200341620 /* SettingsWindowController.swift */; };
 		FC4651422776ABC300901D6F /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FC4651412776ABC300901D6F /* KeyboardShortcuts */; };
 		FC4651442776ABE000901D6F /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4651432776ABE000901D6F /* Constants.swift */; };
+		FC5A37662A59DF8000E02693 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5A37652A59DF8000E02693 /* OnboardingView.swift */; };
+		FCE7562F2A5B460A00E98AC2 /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = FCE7562E2A5B460A00E98AC2 /* SwiftUIPager */; };
 		FCF1C49E285E5D1600A87813 /* HintWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF1C49D285E5D1600A87813 /* HintWindow.swift */; };
 /* End PBXBuildFile section */
 
@@ -88,6 +90,7 @@
 		C9D05714267A664100341620 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C9D05718267A75E200341620 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		FC4651432776ABE000901D6F /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		FC5A37652A59DF8000E02693 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FCF1C49D285E5D1600A87813 /* HintWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintWindow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -105,6 +108,7 @@
 			files = (
 				C9B26CA6263DF26F0041B14E /* HotKey in Frameworks */,
 				C9247BBF2677A1D20095BA5B /* ServiceManagement.framework in Frameworks */,
+				FCE7562F2A5B460A00E98AC2 /* SwiftUIPager in Frameworks */,
 				FC4651422776ABC300901D6F /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -192,6 +196,7 @@
 				C9B09B3D263D118900C401E2 /* ScreenHint.entitlements */,
 				C9B09B39263D118900C401E2 /* Preview Content */,
 				FC4651432776ABE000901D6F /* Constants.swift */,
+				FC5A37652A59DF8000E02693 /* OnboardingView.swift */,
 			);
 			path = ScreenHint;
 			sourceTree = "<group>";
@@ -277,6 +282,7 @@
 			packageProductDependencies = (
 				C9B26CA5263DF26F0041B14E /* HotKey */,
 				FC4651412776ABC300901D6F /* KeyboardShortcuts */,
+				FCE7562E2A5B460A00E98AC2 /* SwiftUIPager */,
 			);
 			productName = ScreenHint;
 			productReference = C9B09B30263D118600C401E2 /* ScreenHint.app */;
@@ -356,6 +362,7 @@
 			packageReferences = (
 				C9B26CA4263DF26F0041B14E /* XCRemoteSwiftPackageReference "HotKey" */,
 				FC4651402776ABC300901D6F /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				FCE7562D2A5B460A00E98AC2 /* XCRemoteSwiftPackageReference "SwiftUIPager" */,
 			);
 			productRefGroup = C9B09B31263D118600C401E2 /* Products */;
 			projectDirPath = "";
@@ -427,6 +434,7 @@
 				C90C29D32675BB470049C811 /* HintWindowController.swift in Sources */,
 				C9B09B34263D118600C401E2 /* ScreenHintApp.swift in Sources */,
 				FC4651442776ABE000901D6F /* Constants.swift in Sources */,
+				FC5A37662A59DF8000E02693 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,7 +488,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHintLauncher;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -507,7 +515,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHintLauncher;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -569,7 +577,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -626,7 +634,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -654,7 +662,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -681,7 +689,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.salem.ScreenHint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -703,7 +711,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = salem.ScreenHintTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -725,7 +733,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = salem.ScreenHintTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -840,6 +848,14 @@
 				kind = branch;
 			};
 		};
+		FCE7562D2A5B460A00E98AC2 /* XCRemoteSwiftPackageReference "SwiftUIPager" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fermoya/SwiftUIPager.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -852,6 +868,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FC4651402776ABC300901D6F /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
+		};
+		FCE7562E2A5B460A00E98AC2 /* SwiftUIPager */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FCE7562D2A5B460A00E98AC2 /* XCRemoteSwiftPackageReference "SwiftUIPager" */;
+			productName = SwiftUIPager;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

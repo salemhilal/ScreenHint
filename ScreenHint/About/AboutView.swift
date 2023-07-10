@@ -16,7 +16,7 @@ struct AboutView: View {
             Image("Logo")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .padding()
+                .padding([.bottom, .horizontal])
             Text("Version \(self.version) (Build \(self.build))")
             Link("Need help?", destination: URL(string: "mailto:screenhint@salem.io")!)
 

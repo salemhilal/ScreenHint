@@ -17,27 +17,29 @@ struct SettingsView: View {
         VStack {
             HStack{
                 Text("General")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(.system(.title2, design: .rounded ))
+                    .fontWeight(.semibold)
                 Spacer()
             }
+            
             Form {
                 Toggle("Open ScreenHint at login", isOn: $openAtLogin)
                 Toggle("Pin new hints to active desktop", isOn: $pinToScreen)
             }
-            Divider()
+            
+            Divider().padding(.vertical)
+            
             HStack{
                 Text("Global Shortcut")
-                    .font(.title2)
-                    .fontWeight(.bold)
+
+                    .font(.system(.title2, design: .rounded ))
+                    .fontWeight(.semibold)
                 Spacer()
             }
             KeyboardShortcuts.Recorder(for: .createNewHint)
-            
-            Spacer()
         }
-        .padding(20)
-        .frame(width: 350, height: 180)
+        .padding()
+        .frame(minWidth: 350, minHeight: 220)
         .onChange(of: openAtLogin, perform: { shouldOpenAtLogin in
             if (shouldOpenAtLogin) {
                 SMLoginItemSetEnabled(AppIds.launcher as CFString, true)

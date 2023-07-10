@@ -12,7 +12,7 @@ import SwiftUI
 class AboutWindowController: NSWindowController, NSWindowDelegate {
     init() {
         let width: CGFloat = 324;
-        let height: CGFloat = 200;
+        let height: CGFloat = 180;
         // Unlike in other places, we actually mean the main screen.
         // This window is going to show up wherever the keyboard is focused to,
         // so we want it to render in the center of that.
@@ -32,6 +32,8 @@ class AboutWindowController: NSWindowController, NSWindowDelegate {
         let view = NSHostingView(rootView: contentView)
         view.frame = NSRect(x: 0, y: 0, width: width, height: height);
         window.contentView?.addSubview(view)
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true;
         
         super.init(window: window)
         window.delegate = self

@@ -43,6 +43,45 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         UserDefaults.standard.register(defaults: [
             AppStorageKeys.isFirstLaunch: true,
         ])
+        
+        
+        // TODO: remove || true
+        let isFirstLaunch = UserDefaults.standard.bool(forKey: AppStorageKeys.isFirstLaunch) || true
+        print("isFirstLaunch", isFirstLaunch)
+        
+        if (isFirstLaunch) {
+            // Activate ScreenHint so the window appears in front.
+            NSApp.activate(ignoringOtherApps: true)
+            
+            // Create a view controller and a window for OnboardingView
+            let onboardingVc = NSHostingController(rootView: OnboardingView())
+            let onboardingWindow = NSWindow(contentViewController: onboardingVc)
+            
+            // Translucent window effect time wooo
+            let visualEffect = NSVisualEffectView() // Effects are a view...
+            visualEffect.blendingMode = .behindWindow
+            visualEffect.state = .active
+            visualEffect.material = .underWindowBackground
+            // ...which means we need to insert them into the view hierarchy
+            if let subview = onboardingWindow.contentView {
+                visualEffect.addSubview(subview)
+            }
+            onboardingWindow.contentView = visualEffect
+            // and we also need to enable "full size content view"
+            onboardingWindow.styleMask.insert(.fullSizeContentView)
+            
+            // Hide the window's title and title bar
+            onboardingWindow.titleVisibility = .hidden
+            onboardingWindow.titlebarAppearsTransparent = true
+            onboardingWindow.level = .floating
+            
+            
+            // Show the window
+            onboardingWindow.makeKeyAndOrderFront(nil)
+            
+            // Set the "isFirstLaunch" flag to false so that we don't do this again.
+            UserDefaults.standard.set(false, forKey:"isFirstLaunch")
+        }
                 
         // Register our launcher app as a login item
         if (self.openAtLogin) {

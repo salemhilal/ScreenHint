@@ -10,8 +10,6 @@ import AppKit
 import SwiftUI
 import Vision
 
-
-
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
     
     var hintWindow: HintWindow
@@ -50,38 +48,59 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         // TODO: put this in its own method
         let menu = NSMenu()
         
-        let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "")
+        ///
+        /// These menu items are commands that can be taken on the hint
+        ///
+        
+        let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "C")
+        copyItem.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
         copyItem.keyEquivalentModifierMask = [.command]
         copyItem.target = self
         
-        let copyTextItem = menu.addItem(withTitle: "Copy Text", action:#selector(self.menuCopyTextHandler(_:)), keyEquivalent: "")
+        let copyTextItem = menu.addItem(withTitle: "Copy Text", action:#selector(self.menuCopyTextHandler(_:)), keyEquivalent: "X")
+        copyTextItem.image = NSImage(systemSymbolName: "text.viewfinder", accessibilityDescription: nil)
         copyTextItem.keyEquivalentModifierMask = [.command]
         copyTextItem.target = self
         
-        let borderlessModeItem = menu.addItem(withTitle: "Borderless Mode", action:#selector(self.borderlessModeHandler(_:)), keyEquivalent: "B")
-        borderlessModeItem.keyEquivalentModifierMask = [.command]
+        menu.addItem(NSMenuItem.separator())
+        
+        ///
+        /// These menu items represent per-hint settings that can be toggled on and off.
+        ///
+        
+        let borderlessModeItem = menu.addItem(withTitle: "Hide Borders", action:#selector(self.borderlessModeHandler(_:)), keyEquivalent: "B")
+        borderlessModeItem.image = NSImage(systemSymbolName: "square.dashed.inset.fill", accessibilityDescription: nil)
         borderlessModeItem.target = self
         borderlessModeItem.state = self.isBorderless ? .on : .off
         self.borderlessModeMenuItem = borderlessModeItem
 
-                                              
-        let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)),
-                                                keyEquivalent: "")
+        let showItem = menu.addItem(withTitle: "Show On All Desktops", action:#selector(self.menuShowOnAllDesktopsHandler(_:)), keyEquivalent: "")
+        showItem.image = NSImage(systemSymbolName: "lock.open.desktopcomputer", accessibilityDescription: nil)
         showItem.state = self.pinToDesktop ? .off : .on
         showItem.target = self
         self.allDesktopsMenuItem = showItem
         
         menu.addItem(NSMenuItem.separator())
         
+        ///
+        /// These menu items are for using the hint elsewhere (saving, exporting, etc.)
+        ///
+        
         let saveAsItem = menu.addItem(withTitle: "Save As...", action:#selector(self.menuSaveAsHandler(_:)), keyEquivalent: "")
+        saveAsItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
         saveAsItem.target = self;
         
         let openInPreviewItem = menu.addItem(withTitle: "Open in Default App", action:#selector(self.menuOpenWithPreviewHandler(_:)), keyEquivalent: "")
+        openInPreviewItem.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
         openInPreviewItem.target = self;
         
         menu.addItem(NSMenuItem.separator())
         
-        let closeItem = menu.addItem(withTitle: "Close", action: #selector(self.menuCloseHandler(_:)), keyEquivalent: "");
+        ///
+        /// The "close" menu item lives a little separate, just to avoid accidental clicks
+        ///
+        let closeItem = menu.addItem(withTitle: "Delete Hint", action: #selector(self.menuCloseHandler(_:)), keyEquivalent: "");
+        closeItem.image =  NSImage(systemSymbolName: "minus.circle", accessibilityDescription: nil)
         closeItem.target = self
 
         

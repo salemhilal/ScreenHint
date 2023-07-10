@@ -11,31 +11,14 @@ import AppKit
 
 class SettingsWindowController: NSWindowController, NSWindowDelegate {
     init() {
-        let width: CGFloat = 350;
-        let height: CGFloat = 180;
-        // Unlike in other places, we actually mean the main screen.
-        // This window is going to show up wherever the keyboard is focused to,
-        // so we want it to render in the center of that.
-        let screenFrame = NSScreen.main!.frame;
+        let vc = NSHostingController(rootView: SettingsView())
+        let window = NSWindow(contentViewController: vc)
         
-        let settingsRect = NSRect(
-            x: screenFrame.width / 2 - (width / 2),
-            y: screenFrame.height / 2 - (height / 2),
-            width: width,
-            height: height
-        )
-        
-        let window = NSWindow(contentRect: settingsRect, styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.makeKeyAndOrderFront(nil)
         window.level = .floating
-        window.isMovable = true
-        window.title = "Settings"
-        
-        let settingsView = SettingsView()
-        let view = NSHostingView(rootView: settingsView)
-        view.frame = NSRect(x: 0, y: 0, width: width, height: height);
-        window.setContentSize(view.frame.size)
-        window.contentView?.addSubview(view)
-        
+
         super.init(window: window)
         window.delegate = self
     }
