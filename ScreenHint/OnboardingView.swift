@@ -65,8 +65,9 @@ struct OnboardingMakeHintView: View {
                 
                 Image("Onboarding.NewHint")
                     .resizable()
-                    .cornerRadius(6)
                     .aspectRatio(contentMode: .fit)
+                    .cornerRadius(5)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth:1))
                     .padding(.vertical)
                 
                 Text("A hint is a floating screenshot.")
@@ -77,9 +78,9 @@ struct OnboardingMakeHintView: View {
                 Text("""
                     Create a hint by selecting **"New Hint"** from ScreenHint's menu bar icon, and then clicking and dragging to select a portion of your screen.
                     
-                    You can **move** a hint by dragging it around.
+                    You can **move** hints by dragging them around.
                     
-                    You can **resize** a hint by dragging its edges.
+                    You can **resize** hints by dragging their edges.
                     
                     """)
                     .font(.system(.title3))
@@ -123,13 +124,15 @@ struct OnboardingUseHintView: View {
                 Image("Onboarding.CopyHint")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .cornerRadius(6)
+                    .cornerRadius(5)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth:1))
                     .padding(.vertical)
 
                 Text("You can do a lot with hints.")
                     .font(.system(.title, design: .rounded))
                     .fontWeight(.semibold)
                     .padding(.bottom)
+                
                 Text("""
                     Hints can be copied, saved, collaged, and can even have identifiable text extracted.
                     
@@ -138,6 +141,7 @@ struct OnboardingUseHintView: View {
                     When you're done, **double-click** a hint to close it.
                     """)
                     .font(.system(.title3))
+                
             }
             .frame(width:350)
             
@@ -151,7 +155,9 @@ struct OnboardingUseHintView: View {
                 }
                 .buttonStyle(.link)
                 .controlSize(.large)
+                
                 Spacer()
+                
                 Button(action: { withAnimation {
                     self.page.update(.next)
                 }}) {
@@ -176,13 +182,15 @@ struct OnboardingSettingsView: View {
                 Image("Onboarding.Settings")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .cornerRadius(6)
+                    .cornerRadius(5)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth:1))
                     .padding(.vertical)
 
                 Text("Set a global keyboard shortcut.")
                     .font(.system(.title, design: .rounded))
                     .fontWeight(.semibold)
                     .padding(.bottom)
+                
                 Text("""
                     ScreenHint works best when it's close at hand.
                     
@@ -192,6 +200,7 @@ struct OnboardingSettingsView: View {
                     `\(Image(systemName:"command")) + \(Image(systemName:"shift")) + 2`.
                     """)
                     .font(.system(.title3))
+                
             }
             .frame(width:350)
             

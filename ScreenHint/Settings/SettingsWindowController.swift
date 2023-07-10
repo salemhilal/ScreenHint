@@ -18,6 +18,11 @@ class SettingsWindowController: NSWindowController, NSWindowDelegate {
         window.titlebarAppearsTransparent = true
         window.makeKeyAndOrderFront(nil)
         window.level = .floating
+        window.standardWindowButton(.zoomButton)?.isHidden = true
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        window.styleMask.remove(.resizable)
+
+
 
         super.init(window: window)
         window.delegate = self

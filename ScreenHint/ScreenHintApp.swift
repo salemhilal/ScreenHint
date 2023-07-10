@@ -44,41 +44,12 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             AppStorageKeys.isFirstLaunch: true,
         ])
         
-        
         // TODO: remove || true
         let isFirstLaunch = UserDefaults.standard.bool(forKey: AppStorageKeys.isFirstLaunch) || true
         print("isFirstLaunch", isFirstLaunch)
         
         if (isFirstLaunch) {
-            // Activate ScreenHint so the window appears in front.
-            NSApp.activate(ignoringOtherApps: true)
-            
-            // Create a view controller and a window for OnboardingView
-            let onboardingVc = NSHostingController(rootView: OnboardingView())
-            let onboardingWindow = NSWindow(contentViewController: onboardingVc)
-            
-            // Translucent window effect time wooo
-            let visualEffect = NSVisualEffectView() // Effects are a view...
-            visualEffect.blendingMode = .behindWindow
-            visualEffect.state = .active
-            visualEffect.material = .underWindowBackground
-            // ...which means we need to insert them into the view hierarchy
-            if let subview = onboardingWindow.contentView {
-                visualEffect.addSubview(subview)
-            }
-            onboardingWindow.contentView = visualEffect
-            // and we also need to enable "full size content view"
-            onboardingWindow.styleMask.insert(.fullSizeContentView)
-            
-            // Hide the window's title and title bar
-            onboardingWindow.titleVisibility = .hidden
-            onboardingWindow.titlebarAppearsTransparent = true
-            onboardingWindow.level = .floating
-            
-            
-            // Show the window
-            onboardingWindow.makeKeyAndOrderFront(nil)
-            
+            self.showOnboarding(nil)
             // Set the "isFirstLaunch" flag to false so that we don't do this again.
             UserDefaults.standard.set(false, forKey:"isFirstLaunch")
         }
@@ -123,8 +94,43 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.createMenu()
     }
     
-    deinit {
-        UserDefaults.standard.set(false, forKey:"isFirstLaunch")
+    @objc func showOnboarding(_ sender: AnyObject?) {
+        // Activate ScreenHint so the window appears in front.
+        NSApp.activate(ignoringOtherApps: true)
+        
+        // Create a view controller and a window for OnboardingView
+        let onboardingVc = NSHostingController(rootView: OnboardingView())
+        let onboardingWindow = NSWindow(contentViewController: onboardingVc)
+        
+        
+        // Translucent window effect time wooo
+        let visualEffect = NSVisualEffectView() // Effects are a view...
+        visualEffect.blendingMode = .behindWindow
+        visualEffect.state = .active
+        visualEffect.material = .underWindowBackground
+        // ...which means we need to insert them into the view hierarchy
+        if let subview = onboardingWindow.contentView {
+            visualEffect.addSubview(subview)
+        }
+        onboardingWindow.contentView = visualEffect
+        
+        // we also need to enable "full size content view" and disable resizing
+        onboardingWindow.styleMask.insert(.fullSizeContentView)
+        onboardingWindow.styleMask.remove(.resizable)
+        
+        // Hide the window's title and title bar
+        onboardingWindow.titleVisibility = .hidden
+        onboardingWindow.titlebarAppearsTransparent = true
+        onboardingWindow.level = .floating
+        
+        // Hide everything but the close button
+        onboardingWindow.standardWindowButton(.zoomButton)?.isHidden = true
+        onboardingWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
+
+        // Show the window
+        onboardingWindow.makeKeyAndOrderFront(nil)
+        
+
     }
     
     /**
@@ -207,12 +213,21 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         
         menu.addItem(NSMenuItem.separator())
         
+        let onboardingItem = menu.addItem(
+            withTitle: "Show Onboarding",
+            action: #selector(showOnboarding(_:)),
+            keyEquivalent: ""
+        )
+        onboardingItem.image = NSImage(systemSymbolName: "hand.wave", accessibilityDescription: nil)
+        
         let aboutItem = menu.addItem(
-            withTitle: "About...",
+            withTitle: "About ScreenHint",
             action: #selector(showAbout(_:)),
             keyEquivalent: ""
         )
         aboutItem.image = NSImage(systemSymbolName: "info.circle", accessibilityDescription: nil)
+        
+        menu.addItem(NSMenuItem.separator())
         
         let quitItem = menu.addItem(
             withTitle: "Quit",
