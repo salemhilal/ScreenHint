@@ -23,7 +23,6 @@
 		C9B26CA6263DF26F0041B14E /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = C9B26CA5263DF26F0041B14E /* HotKey */; };
 		C9CB6A23267D9A2D007E76A9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CB6A22267D9A2D007E76A9 /* main.swift */; };
 		C9D05715267A664100341620 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D05714267A664100341620 /* SettingsView.swift */; };
-		C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D05718267A75E200341620 /* SettingsWindowController.swift */; };
 		FC4651422776ABC300901D6F /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = FC4651412776ABC300901D6F /* KeyboardShortcuts */; };
 		FC4651442776ABE000901D6F /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4651432776ABE000901D6F /* Constants.swift */; };
 		FC5A37662A59DF8000E02693 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC5A37652A59DF8000E02693 /* OnboardingView.swift */; };
@@ -86,7 +85,6 @@
 		C9B09B53263D118900C401E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C9CB6A22267D9A2D007E76A9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C9D05714267A664100341620 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		C9D05718267A75E200341620 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		FC4651432776ABE000901D6F /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		FC5A37652A59DF8000E02693 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FCF1C49D285E5D1600A87813 /* HintWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintWindow.swift; sourceTree = "<group>"; };
@@ -237,7 +235,6 @@
 			isa = PBXGroup;
 			children = (
 				C9D05714267A664100341620 /* SettingsView.swift */,
-				C9D05718267A75E200341620 /* SettingsWindowController.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -423,7 +420,6 @@
 			files = (
 				FCF1C49E285E5D1600A87813 /* HintWindow.swift in Sources */,
 				C9B09B36263D118600C401E2 /* AboutView.swift in Sources */,
-				C9D05719267A75E200341620 /* SettingsWindowController.swift in Sources */,
 				C9CB6A23267D9A2D007E76A9 /* main.swift in Sources */,
 				C90C29D5267672410049C811 /* SecretWindowController.swift in Sources */,
 				C9D05715267A664100341620 /* SettingsView.swift in Sources */,
