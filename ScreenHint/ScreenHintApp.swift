@@ -18,10 +18,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // Status bar item
     var statusBarItem: NSStatusItem!
     
-    // ViewControllers
+    // Secret Windows
     var swcs: [SecretWindowController] = []
-    var settings: SettingsWindowController?
-    
     
     // Mouse drag state
     var dragStart: NSPoint = NSPoint.init(x: 0, y: 0)
@@ -43,8 +41,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             AppStorageKeys.isFirstLaunch: true,
         ])
         
-        // TODO: remove || true
-        let isFirstLaunch = UserDefaults.standard.bool(forKey: AppStorageKeys.isFirstLaunch) || true
+        let isFirstLaunch = UserDefaults.standard.bool(forKey: AppStorageKeys.isFirstLaunch)
         print("isFirstLaunch", isFirstLaunch)
         
         if (isFirstLaunch) {
@@ -98,39 +95,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Activate ScreenHint so the window appears in front.
         NSApp.activate(ignoringOtherApps: true)
         
-        // Create a view controller and a window for OnboardingView
-        let onboardingVc = NSHostingController(rootView: OnboardingView())
-        let onboardingWindow = NSWindow(contentViewController: onboardingVc)
-        
-        
-        // Translucent window effect time wooo
-        let visualEffect = NSVisualEffectView() // Effects are a view...
-        visualEffect.blendingMode = .behindWindow
-        visualEffect.state = .active
-        visualEffect.material = .underWindowBackground
-        // ...which means we need to insert them into the view hierarchy
-        if let subview = onboardingWindow.contentView {
-            visualEffect.addSubview(subview)
-        }
-        onboardingWindow.contentView = visualEffect
-        
-        // we also need to enable "full size content view" and disable resizing
-        onboardingWindow.styleMask.insert(.fullSizeContentView)
-        onboardingWindow.styleMask.remove(.resizable)
-        
-        // Hide the window's title and title bar
-        onboardingWindow.titleVisibility = .hidden
-        onboardingWindow.titlebarAppearsTransparent = true
-        onboardingWindow.level = .floating
-        
-        // Hide everything but the close button
-        onboardingWindow.standardWindowButton(.zoomButton)?.isHidden = true
-        onboardingWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
-
-        // Show the window
-        onboardingWindow.makeKeyAndOrderFront(nil)
-        
-
+        // Show the onboarding view
+        showWindowForView(OnboardingView())
     }
     
     /**
@@ -306,8 +272,11 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.hints = []
     }
     
-    @objc func showAbout(_ sender: AnyObject?) {
-        let vc = NSHostingController(rootView: AboutView())
+    /**
+     Given a root SwiftUI view, put it in a window and show it. The window will resize itself based on the size of the provided view.
+     */
+    @discardableResult func showWindowForView<V: View>(_ view: V) -> NSWindow {
+        let vc = NSHostingController(rootView: view)
         let window = NSWindow(contentViewController: vc)
         
         // Translucent window effect time wooo
@@ -336,15 +305,17 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Show the window
         window.makeKeyAndOrderFront(nil)
+        
+        // For good measure, return the window
+        return window
+    }
+    
+    @objc func showAbout(_ sender: AnyObject?) {
+        showWindowForView(AboutView())
     }
     
     @objc func showSettings(_ sender: AnyObject?) {
-        if (self.settings == nil) {
-            self.settings = SettingsWindowController.init()
-        }
-        guard let settings = self.settings else { return }
-        settings.showWindow(nil)
-        settings.window?.makeKey()
+        showWindowForView(SettingsView())
     }
     
     func endCaptureHint() {
