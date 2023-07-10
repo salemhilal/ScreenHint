@@ -9,6 +9,7 @@ import Foundation
 import AppKit
 import SwiftUI
 import Vision
+import UniformTypeIdentifiers
 
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
     
@@ -199,7 +200,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     func shouldSaveImage() {
         guard let image = self.screenshot else { return }
         let savePanel = NSSavePanel()
-        savePanel.allowedFileTypes = ["png"]
+        savePanel.allowedContentTypes = [.png]
         
         let formatter = DateFormatter()
         formatter.dateStyle = .short
@@ -210,7 +211,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         
         savePanel.begin(completionHandler: { (result) in
             if result == .OK, let url = savePanel.url {
-                guard let dest = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) else {
+                guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
                     return
                 }
                 CGImageDestinationAddImage(dest, image, nil)
