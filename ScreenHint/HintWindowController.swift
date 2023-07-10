@@ -142,6 +142,29 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     }
     
     //
+    // -- Delegate methods
+    //
+    
+    func windowDidBecomeKey(_ notification: Notification) {
+        // If it's borderless, leave the hint alone.
+        if (self.isBorderless) { return }
+        
+        // Otherwise, bolden the border when the window becomes key.
+        self.hintWindow.contentView?.layer?.borderColor = CGColor.black
+        self.hintWindow.contentView?.layer?.borderWidth = 1
+    }
+    
+    func windowDidResignKey(_ notification: Notification) {
+        // If it's borderless, leave the hint alone.
+        if (self.isBorderless) { return }
+        
+        // Otherwise, reset the border when it resigns key
+        self.hintWindow.contentView?.layer?.borderColor = CGColor.init(gray: 1.0, alpha: 0.1)
+        self.hintWindow.contentView?.layer?.borderWidth = 1
+    }
+
+    
+    //
     // --- Instance methods
     //
     

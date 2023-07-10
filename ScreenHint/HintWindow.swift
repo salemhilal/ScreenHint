@@ -31,7 +31,8 @@ class HintWindow: NSWindow {
         self.hasShadow = true // togged in borderless mode
         self.contentView?.wantsLayer = true
         self.contentView?.layer?.borderWidth = 1 // toggled in borderless mode
-        self.contentView?.layer?.borderColor = CGColor.black
+        self.contentView?.layer?.borderColor = CGColor.init(gray: 1.0, alpha: 0.1)
+        self.contentView?.layer?.cornerRadius = 3
         // Causes a fast fade-out (at least at time of writing)
         self.animationBehavior = .utilityWindow
 
