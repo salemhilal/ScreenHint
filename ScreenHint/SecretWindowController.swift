@@ -11,7 +11,10 @@ import AppKit
 
 class SecretWindow: NSWindow {
     override var canBecomeKey: Bool {
-        return true
+        return false
+    }
+    override var canBecomeMain: Bool {
+        return false
     }
 }
 
@@ -33,7 +36,6 @@ class SecretWindowController: NSWindowController, NSWindowDelegate {
         
         // Make sure it's above everything and captures mouse movement
         secretWindow.level = .screenSaver
-        secretWindow.ignoresMouseEvents = false
         secretWindow.isMovable = false
         secretWindow.collectionBehavior = [.stationary, .transient, .canJoinAllSpaces]
         

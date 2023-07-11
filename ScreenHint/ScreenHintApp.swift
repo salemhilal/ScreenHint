@@ -65,28 +65,26 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
                 
         // Generate secret windows, now and any time the screen configuration changes
-        self.generateSecretWindows()
-        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
-                                               object: NSApplication.shared,
-                                               queue: OperationQueue.main) {
-            notification -> Void in
-            // TODO: Don't do this, just make secret windows when someone presses the shortcut. this seems to be called all the time.
-            self.generateSecretWindows()
-        }
+//        self.generateSecretWindows()
+//        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
+//                                               object: NSApplication.shared,
+//                                               queue: OperationQueue.main) {
+//            notification -> Void in
+//            // TODO: Don't do this, just make secret windows when someone presses the shortcut. this seems to be called all the time.
+//            self.generateSecretWindows()
+//        }
         
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification,
                                                           object: nil,
                                                           queue: OperationQueue.main) { notification -> Void in
-            // TODO: hide secret window when space is transitioning
+            // TODO: Cancel getting hint when changing spaces
         }
         
+        // Bind global keyboard shortcut for making hints
         KeyboardShortcuts.onKeyUp(for: .createNewHint) { [self] in
-            // The user pressed the keyboard shortcut for “unicorn mode”!
             self.captureHint(nil)
         }
 
-        
-        
         // Initialize the status bar menu
         self.createMenu()
     }
@@ -249,6 +247,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         
         // Show the screen capture overlays on each screen
+        self.generateSecretWindows()
         self.swcs.forEach({ $0.showWindow(nil); })
         
         // Set up event monitors
@@ -324,7 +323,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             secretWindow.setHighlightRect(nil);
             secretWindow.close()
         })
-
+        self.swcs = []
     }
     
     /**
@@ -357,6 +356,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if (self.mouseUpMonitor == nil) {
             self.mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp]) { event in
                 
+                // TODO: if hint is too small, don't make it (to prevent against random clicks)
+                
                 let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
                 let newHint = HintWindowController(rect);
                 newHint.showWindow(nil)
@@ -376,14 +377,15 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         
         if (self.keyDownMonitor == nil) {
-            self.keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            self.keyDownMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
                 // If escape is pressed and we are actively capturing a hint,
                 // stop capturing that hint.
+                // TODO: This isn't working. How come.
+                // I think it's because SecretWindow isn't key. It works if you are mid-drag.
                 if (Int(event.keyCode) == kVK_Escape) {
                     self.endCaptureHint()
                 }
                 
-                return nil
             }
         }
         

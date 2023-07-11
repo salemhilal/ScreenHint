@@ -174,8 +174,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "322"
-            endingLineNumber = "322"
+            startingLineNumber = "321"
+            endingLineNumber = "321"
             landmarkName = "endCaptureHint()"
             landmarkType = "7">
          </BreakpointContent>
@@ -190,8 +190,8 @@
             filePath = "ScreenHint/SecretWindowController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "27"
-            endingLineNumber = "27"
+            startingLineNumber = "30"
+            endingLineNumber = "30"
             landmarkName = "init(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -226,6 +226,134 @@
             endingLineNumber = "182"
             landmarkName = "animateBorderColor(for:to:duration:)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "3DA4B49E-829F-491E-B665-E644FE4AA809"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ScreenHint/ScreenHintApp.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "385"
+            endingLineNumber = "385"
+            landmarkName = "setupMonitors()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "3DA4B49E-829F-491E-B665-E644FE4AA809 - ada9029c1d3ba8a0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #4 (__C.NSEvent) -&gt; Swift.Optional&lt;__C.NSEvent&gt; in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "384"
+                  endingLineNumber = "384"
+                  offsetFromSymbolStart = "44">
+               </Location>
+               <Location
+                  uuid = "3DA4B49E-829F-491E-B665-E644FE4AA809 - 139d5953aeb7cecd"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #4 (__C.NSEvent) -&gt; () in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "385"
+                  endingLineNumber = "385"
+                  offsetFromSymbolStart = "44">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "570EBBCE-0A33-4F8B-940B-775068DBB907"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ScreenHint/ScreenHintApp.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "386"
+            endingLineNumber = "386"
+            landmarkName = "setupMonitors()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "C04739E7-1FE1-4D26-A62D-2136AC10AEF8"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ScreenHint/ScreenHintApp.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "382"
+            endingLineNumber = "382"
+            landmarkName = "setupMonitors()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "C8666ED2-5F45-484F-A770-270735085B6A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ScreenHint/ScreenHintApp.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "380"
+            endingLineNumber = "380"
+            landmarkName = "setupMonitors()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "C8666ED2-5F45-484F-A770-270735085B6A - 50dff315fea2c8d4"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "380"
+                  endingLineNumber = "380"
+                  offsetFromSymbolStart = "1848">
+               </Location>
+               <Location
+                  uuid = "C8666ED2-5F45-484F-A770-270735085B6A - 139d5953aeb7cecd"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #4 (__C.NSEvent) -&gt; () in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "385"
+                  endingLineNumber = "385"
+                  offsetFromSymbolStart = "44">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

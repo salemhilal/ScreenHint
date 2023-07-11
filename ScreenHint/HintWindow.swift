@@ -36,6 +36,7 @@ class HintWindow: NSWindow {
         // Causes a fast fade-out (at least at time of writing)
         self.animationBehavior = .utilityWindow
 
+
     }
     
     // This window can receive keyboard commands
@@ -83,13 +84,22 @@ class HintWindow: NSWindow {
      Set whether or not to show borders on this hint. Default is yes, we want a border.
      */
     func setBorderlessMode(_ isEnabled: Bool) {
-        if isEnabled {
-            self.hasShadow = false
-            self.contentView?.layer?.borderWidth = 0
-        } else {
-            self.hasShadow = true
-            self.contentView?.layer?.borderWidth = 1
-        }
+        self.animateBorderlessMode(isEnabled)
+        self.hasShadow = !isEnabled
+        self.contentView?.layer?.cornerRadius = isEnabled ? 0 : 3
+    }
+    
+    private func animateBorderlessMode(_ isEnabled: Bool) {
+        guard let layer = self.contentView?.layer else { return }
+
+        let borderAnimation = CABasicAnimation(keyPath: "borderWidth")
+        let newBorder = isEnabled ? 0.0 : 1.0
+        borderAnimation.fromValue = layer.borderWidth
+        borderAnimation.toValue = newBorder;
+        borderAnimation.duration = 0.15
+        layer.borderWidth = newBorder
+
+        layer.add(borderAnimation, forKey: "borderWidthAnimation")
     }
 }
 
