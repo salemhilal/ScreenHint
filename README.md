@@ -1,7 +1,8 @@
-# ScreenHint
+# [ScreenHint](https://screenhint.com)
 
 A screenshotting tool for thinking clearly.
 
+![A screenshot of a bunch of hints](https://github.com/salemhilal/screenhint-site/blob/main/src/static/img/just-hints.png?raw=true)
 
 ## How to publish
 
