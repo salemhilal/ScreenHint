@@ -20,3 +20,7 @@ struct AppStorageKeys {
 struct AppIds {
     static let launcher = "io.salem.ScreenHintLauncher"
 }
+
+struct Constants {
+    static let minHintDimension: CGFloat = 10
+}

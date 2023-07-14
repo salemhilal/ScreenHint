@@ -13,6 +13,7 @@ import ServiceManagement
 import KeyboardShortcuts
 import os
 
+
 class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // Status bar item
@@ -359,17 +360,20 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 // TODO: if hint is too small, don't make it (to prevent against random clicks)
                 
                 let rect = self.getRectForPoints(self.dragStart, NSEvent.mouseLocation);
-                let newHint = HintWindowController(rect);
-                newHint.showWindow(nil)
 
-                newHint.finishDragging()
-                self.hints.append(newHint)
+                // If the hint is big enough, make a hint.
+                if (rect.width > Constants.minHintDimension && rect.height > Constants.minHintDimension) {
+                    let newHint = HintWindowController(rect);
+                    newHint.showWindow(nil)
+                    newHint.finishDragging()
+                    self.hints.append(newHint)
+                    newHint.window?.becomeFirstResponder()
+                }
                 
                 // Clear out closed hints when we add a new one — they currently can't be re-opened once closed.
                 self.hints = self.hints.filter({ rect in
                     rect.window?.isVisible ?? false
                 })
-                newHint.window?.becomeFirstResponder()
                 
                 self.endCaptureHint()
                 return event

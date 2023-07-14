@@ -35,8 +35,8 @@ class HintWindow: NSWindow {
         self.contentView?.layer?.cornerRadius = 3
         // Causes a fast fade-out (at least at time of writing)
         self.animationBehavior = .utilityWindow
-
-
+        // Make sure that a hint can't be resized down to oblivion
+        self.minSize = NSSize(width: Constants.minHintDimension, height: Constants.minHintDimension)
     }
     
     // This window can receive keyboard commands

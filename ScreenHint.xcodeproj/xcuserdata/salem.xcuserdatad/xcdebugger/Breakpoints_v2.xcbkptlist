@@ -142,8 +142,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "47"
-            endingLineNumber = "47"
+            startingLineNumber = "48"
+            endingLineNumber = "48"
             landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -174,8 +174,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "321"
-            endingLineNumber = "321"
+            startingLineNumber = "322"
+            endingLineNumber = "322"
             landmarkName = "endCaptureHint()"
             landmarkType = "7">
          </BreakpointContent>
@@ -206,8 +206,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "73"
-            endingLineNumber = "73"
+            startingLineNumber = "74"
+            endingLineNumber = "74"
             landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -238,8 +238,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "385"
-            endingLineNumber = "385"
+            startingLineNumber = "389"
+            endingLineNumber = "389"
             landmarkName = "setupMonitors()"
             landmarkType = "7">
             <Locations>
@@ -286,8 +286,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "386"
-            endingLineNumber = "386"
+            startingLineNumber = "390"
+            endingLineNumber = "390"
             landmarkName = "setupMonitors()"
             landmarkType = "7">
          </BreakpointContent>
@@ -302,8 +302,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "382"
-            endingLineNumber = "382"
+            startingLineNumber = "386"
+            endingLineNumber = "386"
             landmarkName = "setupMonitors()"
             landmarkType = "7">
          </BreakpointContent>
@@ -318,8 +318,8 @@
             filePath = "ScreenHint/ScreenHintApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "380"
-            endingLineNumber = "380"
+            startingLineNumber = "384"
+            endingLineNumber = "384"
             landmarkName = "setupMonitors()"
             landmarkType = "7">
             <Locations>
@@ -370,6 +370,54 @@
             endingLineNumber = "253"
             landmarkName = "shouldSaveImage()"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "AB132343-A12D-4E8C-AAC7-1419E299A033"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ScreenHint/ScreenHintApp.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "365"
+            endingLineNumber = "365"
+            landmarkName = "setupMonitors()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "AB132343-A12D-4E8C-AAC7-1419E299A033 - 910395409af2eb1d"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #3 (__C.NSEvent) -&gt; Swift.Optional&lt;__C.NSEvent&gt; in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "364"
+                  endingLineNumber = "364"
+                  offsetFromSymbolStart = "248">
+               </Location>
+               <Location
+                  uuid = "AB132343-A12D-4E8C-AAC7-1419E299A033 - 910395409af2eb3c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #3 (__C.NSEvent) -&gt; Swift.Optional&lt;__C.NSEvent&gt; in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "365"
+                  endingLineNumber = "365"
+                  offsetFromSymbolStart = "256">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
