@@ -14,8 +14,8 @@
             filePath = "ScreenHint/HintWindowController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "251"
-            endingLineNumber = "251"
+            startingLineNumber = "252"
+            endingLineNumber = "252"
             landmarkName = "shouldSaveImage()"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,11 +30,26 @@
             filePath = "ScreenHint/HintWindowController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "271"
-            endingLineNumber = "271"
+            startingLineNumber = "272"
+            endingLineNumber = "272"
             landmarkName = "shouldOpenImageInPreview()"
             landmarkType = "7">
             <Locations>
+               <Location
+                  uuid = "24FEDA1B-C301-47E4-9399-F2A8CDD6D3F0 - becd6fd516e7a230"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ScreenHint.HintWindowController.shouldOpenImageInPreview() -&gt; ()"
+                  moduleName = "ScreenHint"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "275"
+                  endingLineNumber = "275"
+                  offsetFromSymbolStart = "792">
+               </Location>
                <Location
                   uuid = "24FEDA1B-C301-47E4-9399-F2A8CDD6D3F0 - becd6fd516e7a297"
                   shouldBeEnabled = "Yes"
@@ -48,21 +63,6 @@
                   endingColumnNumber = "9223372036854775807"
                   startingLineNumber = "272"
                   endingLineNumber = "272"
-                  offsetFromSymbolStart = "728">
-               </Location>
-               <Location
-                  uuid = "24FEDA1B-C301-47E4-9399-F2A8CDD6D3F0 - becd6fd516e7a2b4"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ScreenHint.HintWindowController.shouldOpenImageInPreview() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "271"
-                  endingLineNumber = "271"
                   offsetFromSymbolStart = "1084">
                </Location>
             </Locations>
@@ -78,8 +78,8 @@
             filePath = "ScreenHint/HintWindowController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "268"
-            endingLineNumber = "268"
+            startingLineNumber = "269"
+            endingLineNumber = "269"
             landmarkName = "shouldOpenImageInPreview()"
             landmarkType = "7">
             <Locations>
@@ -126,10 +126,10 @@
             filePath = "ScreenHint/HintWindowController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "276"
-            endingLineNumber = "276"
-            landmarkName = "shouldOpenImageInPreview()"
-            landmarkType = "7">
+            startingLineNumber = "277"
+            endingLineNumber = "277"
+            landmarkName = "HintWindowController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -354,6 +354,22 @@
                   offsetFromSymbolStart = "44">
                </Location>
             </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "15C7B851-F68F-4899-A92C-79F8467D9606"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ScreenHint/HintWindowController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "253"
+            endingLineNumber = "253"
+            landmarkName = "shouldSaveImage()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

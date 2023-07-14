@@ -91,7 +91,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         saveAsItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
         saveAsItem.target = self;
         
-        let openInPreviewItem = menu.addItem(withTitle: "Open in Default App", action:#selector(self.menuOpenWithPreviewHandler(_:)), keyEquivalent: "")
+        let openInPreviewItem = menu.addItem(withTitle: "Open", action:#selector(self.menuOpenWithPreviewHandler(_:)), keyEquivalent: "")
         openInPreviewItem.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
         openInPreviewItem.target = self;
         
@@ -238,6 +238,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     func shouldSaveImage() {
         guard let image = self.screenshot else { return }
         let savePanel = NSSavePanel()
+        savePanel.level = .screenSaver
         savePanel.allowedContentTypes = [.png]
         
         let formatter = DateFormatter()
