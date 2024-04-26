@@ -62,6 +62,11 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         copyTextItem.image = NSImage(systemSymbolName: "text.viewfinder", accessibilityDescription: nil)
         copyTextItem.keyEquivalentModifierMask = [.command]
         copyTextItem.target = self
+      
+        let opacityItem = menu.addItem(withTitle: "Set Opacity", action: #selector(self.menuOpacityHandler(_:)), keyEquivalent: "O")
+        opacityItem.image = NSImage(systemSymbolName: "drop.halffull", accessibilityDescription: nil)
+        opacityItem.keyEquivalentModifierMask = [.command]
+        opacityItem.target = self
         
         menu.addItem(NSMenuItem.separator())
         
@@ -119,6 +124,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     
     @objc func menuCopyHandler(_ sender: AnyObject?) {
         self.shouldCopy()
+    }
+  
+    @objc func menuOpacityHandler(_ sender: AnyObject?) {
+        self.hintWindow.showOpacitySlider()
     }
                                               
     @objc func borderlessModeHandler(_ sender: AnyObject?) {
