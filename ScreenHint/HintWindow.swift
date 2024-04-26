@@ -20,6 +20,7 @@ class HintWindow: NSWindow {
     
     var copyDelegate: CopyDelegate?
     var screenshot: CGImage? = nil
+    private var screenshotOpacity: Double = 1.0
 
     override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect:contentRect, styleMask:style, backing:backingStoreType, defer: flag)
@@ -35,8 +36,6 @@ class HintWindow: NSWindow {
         self.contentView?.layer?.cornerRadius = 3
         // Causes a fast fade-out (at least at time of writing)
         self.animationBehavior = .utilityWindow
-
-
     }
     
     // This window can receive keyboard commands
@@ -88,6 +87,44 @@ class HintWindow: NSWindow {
         self.hasShadow = !isEnabled
         self.contentView?.layer?.cornerRadius = isEnabled ? 0 : 3
     }
+  
+    func showOpacitySlider() {
+      guard let contentView else { return }
+      let blurViewSize = CGSize(width: min(200, contentView.frame.width - 20), height: 30)
+      
+      let blurView = NSVisualEffectView()
+      blurView.material = .popover
+      blurView.blendingMode = .withinWindow
+      blurView.state = .active
+      blurView.wantsLayer = true
+      blurView.layer?.cornerRadius = 4
+      blurView.layer?.masksToBounds = true
+      blurView.translatesAutoresizingMaskIntoConstraints = false
+      contentView.addSubview(blurView)
+      
+      NSLayoutConstraint.activate([
+        blurView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+        blurView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+        blurView.widthAnchor.constraint(equalToConstant: blurViewSize.width),
+        blurView.heightAnchor.constraint(equalToConstant: blurViewSize.height)
+      ])
+      
+      let sliderView = OpacitySlider(value: screenshotOpacity, minValue: 0.2, maxValue: 1.0, target: self, action: #selector(opacitySliderValueChanged))
+      sliderView.isContinuous = true
+      sliderView.translatesAutoresizingMaskIntoConstraints = false
+      sliderView.onRelease = { [weak self] value in
+        self?.screenshotOpacity = value
+        blurView.removeFromSuperview()
+      }
+      blurView.addSubview(sliderView)
+      
+      NSLayoutConstraint.activate([
+        sliderView.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
+        sliderView.centerYAnchor.constraint(equalTo: blurView.centerYAnchor),
+        sliderView.widthAnchor.constraint(equalToConstant: blurViewSize.width - 20),
+        sliderView.heightAnchor.constraint(equalToConstant: blurViewSize.height - 20)
+      ])
+    }
     
     private func animateBorderlessMode(_ isEnabled: Bool) {
         guard let layer = self.contentView?.layer else { return }
@@ -124,4 +161,20 @@ class WindowDraggableImageView: NSImageView {
     override public func mouseDragged(with event: NSEvent) {
         window?.performDrag(with: event)
     }
+}
+
+// MARK: - Private Methods
+private extension HintWindow {
+  @objc func opacitySliderValueChanged(_ sender: NSSlider) {
+    contentView?.subviews.first { $0 is WindowDraggableImageView }?.layer?.opacity = Float(sender.doubleValue)
+  }
+  
+  class OpacitySlider: NSSlider {
+    var onRelease: ((Double) -> Void)?
+    
+    override func mouseDown(with event: NSEvent) {
+      super.mouseDown(with: event)
+      onRelease?(doubleValue)
+    }
+  }
 }
