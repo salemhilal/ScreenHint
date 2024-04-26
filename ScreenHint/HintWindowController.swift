@@ -11,7 +11,7 @@ import SwiftUI
 import Vision
 import UniformTypeIdentifiers
 
-class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
+class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, BorderDelegate, NSMenuDelegate {
     
     var hintWindow: HintWindow
     var screenshot: CGImage?
@@ -44,6 +44,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         
         window.delegate = self
         window.copyDelegate = self
+        window.borderDelegate = self
         
         // Initialize the menu
         // TODO: put this in its own method
@@ -200,6 +201,10 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         self.isBorderless = isBorderless
         self.hintWindow.setBorderlessMode(isBorderless)
         self.borderlessModeMenuItem?.state = self.isBorderless ? .on : .off
+    }
+  
+    func shouldSetBorder() {
+        shouldSetBorderlessMode(!isBorderless)
     }
     
     /**

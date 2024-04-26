@@ -8,8 +8,14 @@
 import Foundation
 import SwiftUI
 
+// should we consider having one delegate?
 protocol CopyDelegate {
-    func shouldCopy();
+    func shouldCopy()
+    func shouldCopyText()
+}
+
+protocol BorderDelegate {
+    func shouldSetBorder()
 }
 
 
@@ -19,8 +25,11 @@ protocol CopyDelegate {
 class HintWindow: NSWindow {
     
     var copyDelegate: CopyDelegate?
+    var borderDelegate: BorderDelegate?
     var screenshot: CGImage? = nil
     private var screenshotOpacity: Double = 1.0
+    private var screenshotMinOpacity: Double = 0.2
+    private var screenshotOpacityStep: Double = 0.05
 
     override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect:contentRect, styleMask:style, backing:backingStoreType, defer: flag)
@@ -52,10 +61,45 @@ class HintWindow: NSWindow {
      Handle keyboard shortcuts
      */
     override func keyDown(with event: NSEvent) {
-        // Cmd + C = copy
-        if (event.charactersIgnoringModifiers == "c" && event.modifierFlags.contains(.command)) {
-            self.copyDelegate?.shouldCopy()
+      // Cmd +
+      if event.modifierFlags.contains(.command) {
+        // Shift +
+        if event.modifierFlags.contains(.shift) {
+          if event.charactersIgnoringModifiers == "C" { // C - copy
+            copyDelegate?.shouldCopy()
+          } else if event.charactersIgnoringModifiers == "B" { // B - border
+            borderDelegate?.shouldSetBorder()
+          } else if event.charactersIgnoringModifiers == "O" { // O - opacity
+            showOpacitySlider()
+          } else if event.charactersIgnoringModifiers == "X" { // X - copy text
+            copyDelegate?.shouldCopyText()
+          } else {
+            switch event.keyCode {
+            case 125: // down - opacity down
+              screenshotOpacity = max(screenshotMinOpacity, (screenshotOpacity - screenshotOpacityStep))
+              applyOpacity(screenshotOpacity)
+            case 126: // up - opacity up
+              screenshotOpacity = min(1, (screenshotOpacity + screenshotOpacityStep))
+              applyOpacity(screenshotOpacity)
+            default:
+              break
+            }
+          }
+        } else {
+          switch event.keyCode {
+          case 123: // left - move left
+            setFrameOrigin(.init(x: frame.origin.x - 1, y: frame.origin.y))
+          case 124: // right - move right
+            setFrameOrigin(.init(x: frame.origin.x + 1, y: frame.origin.y))
+          case 125: // down - move down
+            setFrameOrigin(.init(x: frame.origin.x, y: frame.origin.y - 1))
+          case 126: // up - move up
+            setFrameOrigin(.init(x: frame.origin.x, y: frame.origin.y + 1))
+          default:
+            break
+          }
         }
+      }
     }
     
     /**
@@ -109,7 +153,13 @@ class HintWindow: NSWindow {
         blurView.heightAnchor.constraint(equalToConstant: blurViewSize.height)
       ])
       
-      let sliderView = OpacitySlider(value: screenshotOpacity, minValue: 0.2, maxValue: 1.0, target: self, action: #selector(opacitySliderValueChanged))
+      let sliderView = OpacitySlider(
+        value: screenshotOpacity,
+        minValue: screenshotMinOpacity,
+        maxValue: 1.0,
+        target: self,
+        action: #selector(opacitySliderValueChanged)
+      )
       sliderView.isContinuous = true
       sliderView.translatesAutoresizingMaskIntoConstraints = false
       sliderView.onRelease = { [weak self] value in
@@ -166,7 +216,7 @@ class WindowDraggableImageView: NSImageView {
 // MARK: - Private Methods
 private extension HintWindow {
   @objc func opacitySliderValueChanged(_ sender: NSSlider) {
-    contentView?.subviews.first { $0 is WindowDraggableImageView }?.layer?.opacity = Float(sender.doubleValue)
+    applyOpacity(sender.doubleValue)
   }
   
   class OpacitySlider: NSSlider {
@@ -176,5 +226,9 @@ private extension HintWindow {
       super.mouseDown(with: event)
       onRelease?(doubleValue)
     }
+  }
+  
+  func applyOpacity(_ value: Double) {
+    contentView?.subviews.first { $0 is WindowDraggableImageView }?.layer?.opacity = Float(value)
   }
 }
