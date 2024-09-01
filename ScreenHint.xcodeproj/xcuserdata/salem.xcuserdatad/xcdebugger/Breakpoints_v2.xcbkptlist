@@ -34,38 +34,6 @@
             endingLineNumber = "272"
             landmarkName = "shouldOpenImageInPreview()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "24FEDA1B-C301-47E4-9399-F2A8CDD6D3F0 - becd6fd516e7a230"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ScreenHint.HintWindowController.shouldOpenImageInPreview() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "275"
-                  endingLineNumber = "275"
-                  offsetFromSymbolStart = "792">
-               </Location>
-               <Location
-                  uuid = "24FEDA1B-C301-47E4-9399-F2A8CDD6D3F0 - becd6fd516e7a297"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ScreenHint.HintWindowController.shouldOpenImageInPreview() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "272"
-                  endingLineNumber = "272"
-                  offsetFromSymbolStart = "1084">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -82,38 +50,6 @@
             endingLineNumber = "269"
             landmarkName = "shouldOpenImageInPreview()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "E0720134-7A61-4F8A-8B5A-5FE67F8C9D3D - becd6fd516e7aa91"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ScreenHint.HintWindowController.shouldOpenImageInPreview() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "210"
-                  endingLineNumber = "210"
-                  offsetFromSymbolStart = "1376">
-               </Location>
-               <Location
-                  uuid = "E0720134-7A61-4F8A-8B5A-5FE67F8C9D3D - becd6fd516e7aa91"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ScreenHint.HintWindowController.shouldOpenImageInPreview() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/HintWindowController.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "210"
-                  endingLineNumber = "210"
-                  offsetFromSymbolStart = "820">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -242,38 +178,6 @@
             endingLineNumber = "389"
             landmarkName = "setupMonitors()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "3DA4B49E-829F-491E-B665-E644FE4AA809 - ada9029c1d3ba8a0"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #4 (__C.NSEvent) -&gt; Swift.Optional&lt;__C.NSEvent&gt; in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "384"
-                  endingLineNumber = "384"
-                  offsetFromSymbolStart = "44">
-               </Location>
-               <Location
-                  uuid = "3DA4B49E-829F-491E-B665-E644FE4AA809 - 139d5953aeb7cecd"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #4 (__C.NSEvent) -&gt; () in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "385"
-                  endingLineNumber = "385"
-                  offsetFromSymbolStart = "44">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -322,38 +226,6 @@
             endingLineNumber = "384"
             landmarkName = "setupMonitors()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "C8666ED2-5F45-484F-A770-270735085B6A - 50dff315fea2c8d4"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "380"
-                  endingLineNumber = "380"
-                  offsetFromSymbolStart = "1848">
-               </Location>
-               <Location
-                  uuid = "C8666ED2-5F45-484F-A770-270735085B6A - 139d5953aeb7cecd"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #4 (__C.NSEvent) -&gt; () in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "385"
-                  endingLineNumber = "385"
-                  offsetFromSymbolStart = "44">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -386,38 +258,6 @@
             endingLineNumber = "365"
             landmarkName = "setupMonitors()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "AB132343-A12D-4E8C-AAC7-1419E299A033 - 910395409af2eb1d"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #3 (__C.NSEvent) -&gt; Swift.Optional&lt;__C.NSEvent&gt; in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "364"
-                  endingLineNumber = "364"
-                  offsetFromSymbolStart = "248">
-               </Location>
-               <Location
-                  uuid = "AB132343-A12D-4E8C-AAC7-1419E299A033 - 910395409af2eb3c"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #3 (__C.NSEvent) -&gt; Swift.Optional&lt;__C.NSEvent&gt; in ScreenHint.ScreenHintAppDelegate.setupMonitors() -&gt; ()"
-                  moduleName = "ScreenHint"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/salem/Code/ScreenHint/ScreenHint/ScreenHintApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "365"
-                  endingLineNumber = "365"
-                  offsetFromSymbolStart = "256">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
