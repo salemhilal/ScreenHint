@@ -6,7 +6,7 @@ A screenshotting tool for thinking clearly.
 
 ## How to publish
 
-1. Bump the version and build numbers under ScreenHint's "General" settings.
+1. Bump the version and build numbers under the ScreenHint target's "General" settings.
 2. In Xcode, build an archive (`Product > Archive`). The "Archives" window should open once the archive is built.
 3. Select the built version in the "Archives" window and select "Validate App". 
 	- Check "Upload Symbols" and "Manage Version and Build Number"
