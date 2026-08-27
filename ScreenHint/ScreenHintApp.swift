@@ -41,6 +41,10 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var eventTapSource: CFRunLoopSource?
     private var captureWatchdog: Timer?
 
+    // Scales the raw (unaccelerated) tap deltas into cursor movement. Tune to taste;
+    // lower feels slower. 1.0 is raw device speed (very fast).
+    private static let cursorSensitivity: CGFloat = 0.5
+
     // Selection state, all in global (bottom-left origin) screen coordinates.
     private var virtualCursor: NSPoint = .zero
     private var dragAnchor: NSPoint?
@@ -329,8 +333,11 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return Unmanaged.passUnretained(event)
 
         case .mouseMoved, .leftMouseDragged:
-            let dx = event.getDoubleValueField(.mouseEventDeltaX)
-            let dy = event.getDoubleValueField(.mouseEventDeltaY)
+            // The cursor is frozen while we swallow moves, so event.location doesn't
+            // advance — we have to integrate the deltas ourselves. These deltas are raw
+            // (unaccelerated), so scale them down or the cursor feels hypersensitive.
+            let dx = event.getDoubleValueField(.mouseEventDeltaX) * Self.cursorSensitivity
+            let dy = event.getDoubleValueField(.mouseEventDeltaY) * Self.cursorSensitivity
             // CGEvent deltaY is top-left-origin (down positive); Cocoa y is bottom-left.
             self.virtualCursor = self.clampToScreens(NSPoint(x: self.virtualCursor.x + dx,
                                                              y: self.virtualCursor.y - dy))
