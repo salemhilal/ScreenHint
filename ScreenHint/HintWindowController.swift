@@ -10,6 +10,7 @@ import AppKit
 import SwiftUI
 import Vision
 import UniformTypeIdentifiers
+import ScreenCaptureKit
 
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
     
@@ -26,12 +27,13 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     var pinToDesktop = false
     var isBorderless = false
         
-    init(_ rect: NSRect) {
+    init(_ rect: NSRect, screenshot: CGImage) {
         let window = HintWindow(contentRect: rect, styleMask: [.resizable], backing: .buffered, defer: false)
-    
+
         self.hintWindow = window
+        self.screenshot = screenshot
         super.init(window: window)
-        
+
         // TODO: use instance method to initialize this
         self.pinToDesktop = defaultPinToDesktop;
         if (self.pinToDesktop) {
@@ -104,10 +106,13 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         closeItem.image =  NSImage(systemSymbolName: "minus.circle", accessibilityDescription: nil)
         closeItem.target = self
 
-        
+
         window.menu = menu
+
+        // Put the captured image into the window.
+        self.renderScreenshot()
     }
-    
+
     //
     // --- Handlers ---
     //
@@ -303,60 +308,87 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     }
     
     /**
-     Take a screenshot of the area under the hint window.
+     Capture the region described by `rect` (in global, bottom-left-origin screen
+     coordinates) on the given screen.
+
+     This uses ScreenCaptureKit and excludes ScreenHint's own windows from the capture,
+     so neither the dimmed overlay nor the (not-yet-populated) hint window land in the
+     image. Because we exclude by application, the capture can run while the overlay is
+     still up and the app underneath is still starved of mouse events — which means the
+     hover-triggered UI the user was pointing at is genuinely still on screen at capture
+     time.
      */
-    func finishDragging() {
-        // "The origin point of a rectangle is at its bottom left in Quartz/Cocoa on OS X."
-        // but that's not true for the rect passed to CGWindowListCreateImage
-        // https://stackoverflow.com/a/12438416/444912
-        guard let window = self.window else {
-            return;
+    static func captureImage(of rect: NSRect, on screen: NSScreen) async throws -> CGImage {
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+
+        guard let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID,
+              let display = content.displays.first(where: { $0.displayID == displayID }) else {
+            throw CaptureError.displayNotFound
         }
-        
-        // omg this was so dumb but the main screen is NOT the first screen.
-        // the coordinates are all relative to the _first_ screen. jesus f christ lol
-        // TODO: this, in its own function, with tests.
-        let screen = NSScreen.screens[0];
-        let screenHeight = screen.frame.height
-        let windowRect = window.frame;
-        let screenshotRect = NSRect(
-            x: windowRect.minX,
-            y: screenHeight - windowRect.minY - windowRect.height,
-            width: windowRect.width,
-            height: windowRect.height)
-        
-        
+
+        // Exclude our own process so the overlay/hint chrome never shows up in the shot.
+        let ourApp = content.applications.first {
+            $0.processID == ProcessInfo.processInfo.processIdentifier
+        }
+        let filter = SCContentFilter(display: display,
+                                     excludingApplications: ourApp.map { [$0] } ?? [],
+                                     exceptingWindows: [])
+
+        // sourceRect wants points in the display's coordinate space (top-left origin),
+        // so flip the global (bottom-left origin) rect within its screen.
+        let screenFrame = screen.frame
+        let sourceRect = CGRect(x: rect.minX - screenFrame.minX,
+                                y: screenFrame.maxY - rect.maxY,
+                                width: rect.width,
+                                height: rect.height)
+
+        let scale = screen.backingScaleFactor
+        let config = SCStreamConfiguration()
+        config.sourceRect = sourceRect
+        // width/height are in pixels, so scale the points up by the display's backing factor.
+        config.width = Int(rect.width * scale)
+        config.height = Int(rect.height * scale)
+        config.scalesToFit = false
+        config.showsCursor = false
+        config.captureResolution = .best
+
+        return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+    }
+
+    /**
+     Put the already-captured screenshot into the hint window and finish styling it.
+     */
+    private func renderScreenshot() {
+        guard let screenshot = self.screenshot, let window = self.window else {
+            return
+        }
+
         // Make sure the window keeps its aspect ratio when resizing
         window.aspectRatio = window.frame.size
-        window.alphaValue = 0.0
-        window.backgroundColor = NSColor.clear
-        
-        // Take the screenshot
-        let screenshot = CGWindowListCreateImage(screenshotRect,
-                                                 CGWindowListOption.optionAll,
-                                                 kCGNullWindowID,
-                                                 CGWindowImageOption.bestResolution)!
-        
+
         // Make an image and an imageview to put the screenshot in
-        let image = NSImage(cgImage:screenshot, size: .zero)
+        let image = NSImage(cgImage: screenshot, size: .zero)
         image.resizingMode = .stretch
-        let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: self.window!.frame.size))
+        let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: window.frame.size))
         imageView.image = image
-        
+
         // Make sure the imageView fills the window
         imageView.autoresizingMask = [.height, .width]
         // and that it will scale larger than its original size
         imageView.imageScaling = .scaleProportionallyUpOrDown
-        
-        self.window?.alphaValue = 1.0
-        self.window?.level = .floating
-        self.window?.isOpaque = true
-        self.window?.contentView?.addSubview(imageView)
-        self.screenshot = screenshot
+
+        window.level = .floating
+        window.isOpaque = true
+        window.contentView?.addSubview(imageView)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+}
+
+enum CaptureError: Error {
+    /// The screen the selection was drawn on couldn't be matched to a capturable display.
+    case displayNotFound
 }
 
