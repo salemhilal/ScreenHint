@@ -39,6 +39,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // the selection rect. See the hover-preserving-capture note for more context.
     private var eventTap: CFMachPort?
     private var eventTapSource: CFRunLoopSource?
+    private var captureActive = false  // true only while a capture session is in progress
     private var captureWatchdog: Timer?
 
     // Selection state, all in global (bottom-left origin) screen coordinates.
@@ -105,6 +106,12 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Initialize the status bar menu
         self.createMenu()
+
+        // Pre-warm the event tap so the first capture is instant. CGEvent.tapCreate does
+        // a one-time IPC round-trip to tccd on its first call; doing it here at launch
+        // (where the ~1s delay is invisible) means subsequent calls just re-enable the
+        // existing tap.
+        self.makeEventTap()
     }
     
     @objc func showOnboarding(_ sender: AnyObject?) {
@@ -282,9 +289,12 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return AXIsProcessTrustedWithOptions([key: prompt] as CFDictionary)
     }
 
-    /// Install and enable the swallowing session event tap. Returns false if it couldn't
-    /// be created.
-    private func startEventTap() -> Bool {
+    /// Create the event tap and add it to the run loop in a *disabled* state. No-op if
+    /// the tap already exists. Returns false only if creation fails (Accessibility denied).
+    @discardableResult
+    private func makeEventTap() -> Bool {
+        guard self.eventTap == nil else { return true }
+
         let mask: CGEventMask =
             (1 << CGEventType.mouseMoved.rawValue) |
             (1 << CGEventType.leftMouseDown.rawValue) |
@@ -308,9 +318,18 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
+        CGEvent.tapEnable(tap: tap, enable: false)
         self.eventTap = tap
         self.eventTapSource = source
+        return true
+    }
+
+    /// Enable the event tap for a capture session. Returns false if the tap couldn't be
+    /// created (Accessibility not granted).
+    private func startEventTap() -> Bool {
+        guard makeEventTap(), let tap = self.eventTap else { return false }
+        self.captureActive = true
+        CGEvent.tapEnable(tap: tap, enable: true)
         return true
     }
 
@@ -322,8 +341,9 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func handleTapEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
-            // The system can disable a slow/hijacked tap; re-enable it.
-            if let tap = self.eventTap {
+            // The system can disable a slow/hijacked tap; re-enable it, but only if a
+            // capture is actually in progress (not when we intentionally disabled it).
+            if self.captureActive, let tap = self.eventTap {
                 CGEvent.tapEnable(tap: tap, enable: true)
             }
             return Unmanaged.passUnretained(event)
@@ -531,22 +551,19 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     
     /**
-     Tear down a capture: disable and remove the event tap, restore the cursor, order out
-     the overlays, and clear state. Safe to call more than once and from any exit path
-     (finish, cancel, watchdog, termination).
+     Tear down a capture: disable the event tap, order out the overlays, and clear state.
+     The tap itself is kept alive (disabled) so the next capture can enable it instantly
+     rather than paying the one-time IPC cost to create a new one. Safe to call more than
+     once and from any exit path (finish, cancel, watchdog, termination).
      */
     func endCaptureHint() {
         self.captureWatchdog?.invalidate()
         self.captureWatchdog = nil
 
+        self.captureActive = false
         if let tap = self.eventTap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
-        if let source = self.eventTapSource {
-            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
-        }
-        self.eventTap = nil
-        self.eventTapSource = nil
 
         self.unregisterEscapeHotKey()
 
