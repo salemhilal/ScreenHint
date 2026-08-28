@@ -177,7 +177,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
      A utility to animate the border color of a window
      */
     private func animateBorderColor(for window: NSWindow, to color: CGColor, duration: CFTimeInterval = 0.15) {
-        guard let layer = window.contentView?.layer else { return }
+        guard let layer = (window as? HintWindow)?.imageViewLayer else { return }
 
         let colorAnimation = CABasicAnimation(keyPath: "borderColor")
         colorAnimation.fromValue = layer.borderColor
@@ -380,11 +380,14 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         image.resizingMode = .stretch
         let imageView = WindowDraggableImageView(frame: contentBounds)
         imageView.image = image
-
-        // Make sure the imageView fills the window
         imageView.autoresizingMask = [.height, .width]
-        // and that it will scale larger than its original size
         imageView.imageScaling = .scaleProportionallyUpOrDown
+
+        // Apply visual styling to the image view layer so the content view stays
+        // rectangular and fully covers the window background (no corner bleed-through).
+        imageView.wantsLayer = true
+        imageView.layer?.borderWidth = 1
+        imageView.layer?.borderColor = CGColor(gray: 1.0, alpha: 0.1)
 
         window.level = .floating
         window.isOpaque = true

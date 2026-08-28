@@ -30,9 +30,6 @@ class HintWindow: NSWindow {
         self.isMovable = true
         self.hasShadow = true // togged in borderless mode
         self.contentView?.wantsLayer = true
-        self.contentView?.layer?.borderWidth = 1 // toggled in borderless mode
-        self.contentView?.layer?.borderColor = CGColor.init(gray: 1.0, alpha: 0.1)
-        self.contentView?.layer?.cornerRadius = 3
         // Causes a fast fade-out (at least at time of writing)
         self.animationBehavior = .utilityWindow
         // Make sure that a hint can't be resized down to oblivion
@@ -86,20 +83,23 @@ class HintWindow: NSWindow {
     func setBorderlessMode(_ isEnabled: Bool) {
         self.animateBorderlessMode(isEnabled)
         self.hasShadow = !isEnabled
-        self.contentView?.layer?.cornerRadius = isEnabled ? 0 : 3
     }
-    
+
     private func animateBorderlessMode(_ isEnabled: Bool) {
-        guard let layer = self.contentView?.layer else { return }
+        guard let layer = imageViewLayer else { return }
 
         let borderAnimation = CABasicAnimation(keyPath: "borderWidth")
         let newBorder = isEnabled ? 0.0 : 1.0
         borderAnimation.fromValue = layer.borderWidth
-        borderAnimation.toValue = newBorder;
+        borderAnimation.toValue = newBorder
         borderAnimation.duration = 0.15
         layer.borderWidth = newBorder
 
         layer.add(borderAnimation, forKey: "borderWidthAnimation")
+    }
+
+    var imageViewLayer: CALayer? {
+        (contentView?.subviews.first as? WindowDraggableImageView)?.layer
     }
 }
 
