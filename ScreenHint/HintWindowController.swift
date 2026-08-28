@@ -318,7 +318,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
      hover-triggered UI the user was pointing at is genuinely still on screen at capture
      time.
      */
-    static func captureImage(of rect: NSRect, on screen: NSScreen) async throws -> CGImage {
+    static func captureImage(of rect: NSRect, on screen: NSScreen, exceptingWindowIDs: [CGWindowID] = []) async throws -> CGImage {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
 
         guard let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID,
@@ -326,13 +326,15 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
             throw CaptureError.displayNotFound
         }
 
-        // Exclude our own process so the overlay/hint chrome never shows up in the shot.
+        // Exclude our own process so the overlay chrome never shows up in the shot, but
+        // make exceptions for existing hint windows so they can be captured inside new hints.
         let ourApp = content.applications.first {
             $0.processID == ProcessInfo.processInfo.processIdentifier
         }
+        let exceptedWindows = content.windows.filter { exceptingWindowIDs.contains($0.windowID) }
         let filter = SCContentFilter(display: display,
                                      excludingApplications: ourApp.map { [$0] } ?? [],
-                                     exceptingWindows: [])
+                                     exceptingWindows: exceptedWindows)
 
         let screenFrame = screen.frame
         let scale = screen.backingScaleFactor

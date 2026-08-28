@@ -415,7 +415,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Task { @MainActor in
             defer { self.endCaptureHint() }
             do {
-                let image = try await HintWindowController.captureImage(of: selection, on: screen)
+                let hintWindowIDs = self.hints.compactMap { $0.window.map { CGWindowID($0.windowNumber) } }
+                let image = try await HintWindowController.captureImage(of: selection, on: screen, exceptingWindowIDs: hintWindowIDs)
                 let hint = HintWindowController(selection, screenshot: image)
                 hint.showWindow(nil)
                 hint.window?.becomeFirstResponder()
