@@ -71,6 +71,7 @@ final class OverlayView: NSView {
             context.setLineWidth(1)
             context.stroke(localSelection.insetBy(dx: 0.5, dy: 0.5))
         }
+
     }
 }
 

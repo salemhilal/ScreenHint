@@ -334,25 +334,29 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
                                      excludingApplications: ourApp.map { [$0] } ?? [],
                                      exceptingWindows: [])
 
-        // sourceRect wants points in the display's coordinate space (top-left origin),
-        // so flip the global (bottom-left origin) rect within its screen.
         let screenFrame = screen.frame
-        let sourceRect = CGRect(x: rect.minX - screenFrame.minX,
-                                y: screenFrame.maxY - rect.maxY,
-                                width: rect.width,
-                                height: rect.height)
-
         let scale = screen.backingScaleFactor
+
+        // Capture the full display at native pixel resolution (no sourceRect), then crop
+        // in software. This sidesteps any ambiguity in how SCKit interprets sourceRect
+        // coordinates and guarantees a Retina-density image.
         let config = SCStreamConfiguration()
-        config.sourceRect = sourceRect
-        // width/height are in pixels, so scale the points up by the display's backing factor.
-        config.width = Int(rect.width * scale)
-        config.height = Int(rect.height * scale)
+        config.width = Int(screenFrame.width * scale)
+        config.height = Int(screenFrame.height * scale)
         config.scalesToFit = false
         config.showsCursor = false
-        config.captureResolution = .best
 
-        return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+        let fullImage = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+
+        // CGImage.cropping takes pixel coordinates, top-left origin — flip the Cocoa rect.
+        let cropRect = CGRect(x: (rect.minX - screenFrame.minX) * scale,
+                              y: (screenFrame.maxY - rect.maxY) * scale,
+                              width: rect.width * scale,
+                              height: rect.height * scale)
+        guard let croppedImage = fullImage.cropping(to: cropRect) else {
+            throw CaptureError.cropFailed
+        }
+        return croppedImage
     }
 
     /**
@@ -366,10 +370,15 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         // Make sure the window keeps its aspect ratio when resizing
         window.aspectRatio = window.frame.size
 
-        // Make an image and an imageview to put the screenshot in
-        let image = NSImage(cgImage: screenshot, size: .zero)
+        // Use the content view's actual bounds so the image view always fills it exactly,
+        // with no 1px gaps from window-frame vs content-view coordinate differences.
+        let contentBounds = window.contentView?.bounds ?? NSRect(origin: .zero, size: window.frame.size)
+
+        // Setting the NSImage size to the content area in points (not .zero) tells AppKit
+        // the pixel data is 2x on Retina, so it renders at native density.
+        let image = NSImage(cgImage: screenshot, size: contentBounds.size)
         image.resizingMode = .stretch
-        let imageView = WindowDraggableImageView(frame: NSRect(origin: .zero, size: window.frame.size))
+        let imageView = WindowDraggableImageView(frame: contentBounds)
         imageView.image = image
 
         // Make sure the imageView fills the window
@@ -390,5 +399,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
 enum CaptureError: Error {
     /// The screen the selection was drawn on couldn't be matched to a capturable display.
     case displayNotFound
+    /// The full-display capture succeeded but the crop to the selection rect failed.
+    case cropFailed
 }
 

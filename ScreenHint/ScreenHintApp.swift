@@ -35,22 +35,18 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let escapeHotKeySignature: OSType = 0x53_48_45_53 // 'SHES'
 
     // Event-tap capture state. The tap swallows mouse events so the app underneath keeps
-    // its hover UI; we drive a virtual cursor + selection from the swallowed deltas. See
-    // the hover-preserving-capture note for why this (not a window overlay) is required.
+    // its hover UI; we read the real cursor position from each event and use it to drive
+    // the selection rect. See the hover-preserving-capture note for more context.
     private var eventTap: CFMachPort?
     private var eventTapSource: CFRunLoopSource?
     private var captureWatchdog: Timer?
-
-    // Scales the raw (unaccelerated) tap deltas into cursor movement. Tune to taste;
-    // lower feels slower. 1.0 is raw device speed (very fast).
-    private static let cursorSensitivity: CGFloat = 0.5
 
     // Selection state, all in global (bottom-left origin) screen coordinates.
     private var virtualCursor: NSPoint = .zero
     private var dragAnchor: NSPoint?
     private var currentSelection: NSRect?
 
-    // Union of all screen frames, used to clamp the virtual cursor.
+    // Union of all screen frames, used to clamp the cursor position.
     private var screensBounds: NSRect = .zero
 
     // The ID of our launcher app
@@ -333,17 +329,12 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return Unmanaged.passUnretained(event)
 
         case .mouseMoved, .leftMouseDragged:
-            // The cursor is frozen while we swallow moves, so event.location doesn't
-            // advance — we have to integrate the deltas ourselves. These deltas are raw
-            // (unaccelerated), so scale them down or the cursor feels hypersensitive.
-            let dx = event.getDoubleValueField(.mouseEventDeltaX) * Self.cursorSensitivity
-            let dy = event.getDoubleValueField(.mouseEventDeltaY) * Self.cursorSensitivity
-            // CGEvent deltaY is top-left-origin (down positive); Cocoa y is bottom-left.
-            self.virtualCursor = self.clampToScreens(NSPoint(x: self.virtualCursor.x + dx,
-                                                             y: self.virtualCursor.y - dy))
-            // Move the (otherwise frozen) real cursor to follow. Warping doesn't post a
-            // mouse event, so the app underneath still sees no movement and keeps hover.
-            CGWarpMouseCursorPosition(self.cgPoint(fromCocoa: self.virtualCursor))
+            // Read the real cursor position from the event. The cursor moves at the HID
+            // level before the tap runs, so event.location is the current position.
+            // CGEvent uses top-left origin; convert to Cocoa's bottom-left origin.
+            let loc = event.location
+            let mainH = CGDisplayBounds(CGMainDisplayID()).height
+            self.virtualCursor = self.clampToScreens(NSPoint(x: loc.x, y: mainH - loc.y))
             if let anchor = self.dragAnchor {
                 self.currentSelection = Self.rect(from: anchor, to: self.virtualCursor)
             }
@@ -374,13 +365,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func updateOverlays() {
         let selection = self.currentSelection
         self.swcs.forEach { $0.update(selection: selection) }
-    }
-
-    /// Convert a global Cocoa point (bottom-left origin) to Core Graphics global
-    /// coordinates (top-left origin), for cursor warping.
-    private func cgPoint(fromCocoa point: NSPoint) -> CGPoint {
-        let mainHeight = CGDisplayBounds(CGMainDisplayID()).height
-        return CGPoint(x: point.x, y: mainHeight - point.y)
     }
 
     private func clampToScreens(_ point: NSPoint) -> NSPoint {
