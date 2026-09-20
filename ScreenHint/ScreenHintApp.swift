@@ -406,8 +406,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let selection,
               selection.width > Constants.minHintDimension,
               selection.height > Constants.minHintDimension,
-              let screen = NSScreen.screens.first(where: { $0.frame.contains(NSPoint(x: selection.midX, y: selection.midY)) })
-                        ?? NSScreen.screens.first(where: { $0.frame.intersects(selection) }) else {
+              // The selection may span several displays; captureImage composites them.
+              NSScreen.screens.contains(where: { $0.frame.intersects(selection) }) else {
             self.endCaptureHint()
             return
         }
@@ -416,7 +416,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             defer { self.endCaptureHint() }
             do {
                 let hintWindowIDs = self.hints.compactMap { $0.window.map { CGWindowID($0.windowNumber) } }
-                let image = try await HintWindowController.captureImage(of: selection, on: screen, exceptingWindowIDs: hintWindowIDs)
+                let image = try await HintWindowController.captureImage(of: selection, exceptingWindowIDs: hintWindowIDs)
                 let hint = HintWindowController(selection, screenshot: image)
                 hint.showWindow(nil)
                 hint.window?.becomeFirstResponder()

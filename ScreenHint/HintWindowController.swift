@@ -309,7 +309,13 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     
     /**
      Capture the region described by `rect` (in global, bottom-left-origin screen
-     coordinates) on the given screen.
+     coordinates).
+
+     The selection can span more than one display (e.g. a laptop screen with an external
+     monitor stacked above it), so we capture every display the rect touches and composite
+     the pieces into a single image that is exactly `rect`-sized. Capturing only one
+     display and cropping would yield an image smaller than the hint window, which the
+     window then stretches to fit.
 
      This uses ScreenCaptureKit and excludes ScreenHint's own windows from the capture,
      so neither the dimmed overlay nor the (not-yet-populated) hint window land in the
@@ -318,13 +324,14 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
      hover-triggered UI the user was pointing at is genuinely still on screen at capture
      time.
      */
-    static func captureImage(of rect: NSRect, on screen: NSScreen, exceptingWindowIDs: [CGWindowID] = []) async throws -> CGImage {
-        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-
-        guard let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID,
-              let display = content.displays.first(where: { $0.displayID == displayID }) else {
+    static func captureImage(of rect: NSRect, exceptingWindowIDs: [CGWindowID] = []) async throws -> CGImage {
+        // Every display the selection touches, not just the one it started on.
+        let screens = NSScreen.screens.filter { $0.frame.intersects(rect) }
+        guard !screens.isEmpty else {
             throw CaptureError.displayNotFound
         }
+
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
 
         // Exclude our own process so the overlay chrome never shows up in the shot, but
         // make exceptions for existing hint windows so they can be captured inside new hints.
@@ -332,33 +339,120 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
             $0.processID == ProcessInfo.processInfo.processIdentifier
         }
         let exceptedWindows = content.windows.filter { exceptingWindowIDs.contains($0.windowID) }
-        let filter = SCContentFilter(display: display,
-                                     excludingApplications: ourApp.map { [$0] } ?? [],
-                                     exceptingWindows: exceptedWindows)
 
-        let screenFrame = screen.frame
-        let scale = screen.backingScaleFactor
-
-        // Capture the full display at native pixel resolution (no sourceRect), then crop
-        // in software. This sidesteps any ambiguity in how SCKit interprets sourceRect
-        // coordinates and guarantees a Retina-density image.
-        let config = SCStreamConfiguration()
-        config.width = Int(screenFrame.width * scale)
-        config.height = Int(screenFrame.height * scale)
-        config.scalesToFit = false
-        config.showsCursor = false
-
-        let fullImage = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
-
-        // CGImage.cropping takes pixel coordinates, top-left origin — flip the Cocoa rect.
-        let cropRect = CGRect(x: (rect.minX - screenFrame.minX) * scale,
-                              y: (screenFrame.maxY - rect.maxY) * scale,
-                              width: rect.width * scale,
-                              height: rect.height * scale)
-        guard let croppedImage = fullImage.cropping(to: cropRect) else {
-            throw CaptureError.cropFailed
+        // Composite at the highest density in play, so a Retina slice of the selection
+        // isn't downsampled to match a 1x monitor sitting next to it. A 1x slice does get
+        // upscaled, but that only invents detail it never had — the alternative throws
+        // real pixels away.
+        let outputScale = screens.map { $0.backingScaleFactor }.max() ?? 2.0
+        let outputWidth = Int((rect.width * outputScale).rounded())
+        let outputHeight = Int((rect.height * outputScale).rounded())
+        guard outputWidth > 0, outputHeight > 0 else {
+            throw CaptureError.compositeFailed
         }
-        return croppedImage
+
+        // Capture each display's slice of the selection, paired with where that slice
+        // belongs in the finished image.
+        var pieces: [(image: CGImage, destination: CGRect)] = []
+
+        for screen in screens {
+            guard let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID,
+                  let display = content.displays.first(where: { $0.displayID == displayID }) else {
+                continue
+            }
+
+            let filter = SCContentFilter(display: display,
+                                         excludingApplications: ourApp.map { [$0] } ?? [],
+                                         exceptingWindows: exceptedWindows)
+
+            let screenFrame = screen.frame
+            let scale = screen.backingScaleFactor
+
+            // Capture the full display at native pixel resolution (no sourceRect), then crop
+            // in software. This sidesteps any ambiguity in how SCKit interprets sourceRect
+            // coordinates and guarantees a native-density image.
+            let config = SCStreamConfiguration()
+            config.width = Int(screenFrame.width * scale)
+            config.height = Int(screenFrame.height * scale)
+            config.scalesToFit = false
+            config.showsCursor = false
+
+            let fullImage = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+
+            // The part of the selection that actually lives on this display.
+            let slice = screenFrame.intersection(rect)
+            guard !slice.isNull, slice.width >= 1, slice.height >= 1 else { continue }
+
+            // Source pixels. CGImage.cropping takes pixel coordinates with a top-left
+            // origin, so flip the Cocoa rect. Snap to whole pixels ourselves (cropping
+            // would quantize anyway) and clamp, so the destination below can be derived
+            // from the pixels we actually got.
+            let imageBounds = CGRect(x: 0, y: 0, width: fullImage.width, height: fullImage.height)
+            let crop = CGRect(x: ((slice.minX - screenFrame.minX) * scale).rounded(),
+                              y: ((screenFrame.maxY - slice.maxY) * scale).rounded(),
+                              width: (slice.width * scale).rounded(),
+                              height: (slice.height * scale).rounded())
+                .intersection(imageBounds)
+            guard !crop.isNull, crop.width >= 1, crop.height >= 1,
+                  let piece = fullImage.cropping(to: crop) else { continue }
+
+            // Destination pixels, snapped to the composite's own grid. The selection rect
+            // comes from cursor positions and is rarely on a whole point, so an unsnapped
+            // destination would land off-grid and make CoreGraphics resample every slice —
+            // which reads as the whole hint being softer than the screen it came from.
+            // Snapped, a display whose scale matches outputScale blits 1:1 and is resampled
+            // not at all.
+            let ratio = outputScale / scale
+            let destination = CGRect(x: ((slice.minX - rect.minX) * outputScale).rounded(),
+                                     y: ((slice.minY - rect.minY) * outputScale).rounded(),
+                                     width: (CGFloat(piece.width) * ratio).rounded(),
+                                     height: (CGFloat(piece.height) * ratio).rounded())
+            pieces.append((piece, destination))
+        }
+
+        guard !pieces.isEmpty else {
+            throw CaptureError.displayNotFound
+        }
+
+        // Single display — by far the common case. The crop already is the whole selection
+        // at native density, so hand back those exact pixels rather than blitting them
+        // through a context where they could pick up a resample.
+        if pieces.count == 1,
+           pieces[0].destination.origin == .zero,
+           pieces[0].image.width == outputWidth,
+           pieces[0].image.height == outputHeight {
+            return pieces[0].image
+        }
+
+        let colorSpace = screens.first?.colorSpace?.cgColorSpace ?? CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(data: nil,
+                                      width: outputWidth,
+                                      height: outputHeight,
+                                      bitsPerComponent: 8,
+                                      bytesPerRow: 0,
+                                      space: colorSpace,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
+                                                | CGBitmapInfo.byteOrder32Little.rawValue) else {
+            throw CaptureError.compositeFailed
+        }
+
+        // Displays needn't tile perfectly — stacked screens of different widths leave dead
+        // space inside a spanning selection. Fill it rather than leaving it undefined.
+        context.setFillColor(CGColor(gray: 0, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: outputWidth, height: outputHeight))
+
+        // The context has a bottom-left origin, matching Cocoa screen coordinates.
+        for piece in pieces {
+            let isOneToOne = Int(piece.destination.width) == piece.image.width
+                          && Int(piece.destination.height) == piece.image.height
+            context.interpolationQuality = isOneToOne ? .none : .high
+            context.draw(piece.image, in: piece.destination)
+        }
+
+        guard let composite = context.makeImage() else {
+            throw CaptureError.compositeFailed
+        }
+        return composite
     }
 
     /**
@@ -404,7 +498,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
 enum CaptureError: Error {
     /// The screen the selection was drawn on couldn't be matched to a capturable display.
     case displayNotFound
-    /// The full-display capture succeeded but the crop to the selection rect failed.
-    case cropFailed
+    /// The per-display captures succeeded but compositing them into one image failed.
+    case compositeFailed
 }
 
