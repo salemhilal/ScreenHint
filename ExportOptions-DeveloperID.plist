@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Direct-download build: signed with Developer ID, notarized separately
+	     by the release workflow. The Mac App Store build does NOT use this file. -->
+	<key>method</key>
+	<string>developer-id</string>
+	<key>teamID</key>
+	<string>S3979WFPKR</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>Developer ID Application</string>
+	<!-- We notarize with notarytool in CI rather than letting Xcode do it,
+	     so that the workflow can staple and re-zip deterministically. -->
+	<key>destination</key>
+	<string>export</string>
+	<key>stripSwiftSymbols</key>
+	<true/>
+</dict>
+</plist>
