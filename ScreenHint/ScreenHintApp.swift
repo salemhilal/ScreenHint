@@ -39,16 +39,17 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // the selection rect. See the hover-preserving-capture note for more context.
     private var eventTap: CFMachPort?
     private var eventTapSource: CFRunLoopSource?
-    private var captureActive = false  // true only while a capture session is in progress
+    // Internal (not private) so tests can drive handleTapEvent directly and assert on state.
+    var captureActive = false  // true only while a capture session is in progress
     private var captureWatchdog: Timer?
 
     // Selection state, all in global (bottom-left origin) screen coordinates.
-    private var virtualCursor: NSPoint = .zero
-    private var dragAnchor: NSPoint?
-    private var currentSelection: NSRect?
+    var virtualCursor: NSPoint = .zero
+    var dragAnchor: NSPoint?
+    var currentSelection: NSRect?
 
     // Union of all screen frames, used to clamp the cursor position.
-    private var screensBounds: NSRect = .zero
+    var screensBounds: NSRect = .zero
 
     // The ID of our launcher app
     @AppStorage(AppStorageKeys.openAtLogin) private var openAtLogin = false
@@ -62,8 +63,12 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         
         let isFirstLaunch = UserDefaults.standard.bool(forKey: AppStorageKeys.isFirstLaunch)
         print("isFirstLaunch", isFirstLaunch)
-        
-        if (isFirstLaunch) {
+
+        // ScreenHintTests runs with this app as its TEST_HOST, so every test run launches
+        // us for real. Don't pop onboarding over the tests.
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+
+        if (isFirstLaunch && !isRunningTests) {
             self.showOnboarding(nil)
             // Set the "isFirstLaunch" flag to false so that we don't do this again.
             UserDefaults.standard.set(false, forKey:"isFirstLaunch")
@@ -338,7 +343,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
      source is on the main run loop). Returns nil to swallow the event, or the event to
      let it pass. Mouse move/drag/down/up are swallowed and drive the selection.
      */
-    private func handleTapEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+    // Internal (not private) so tests can feed it synthetic CGEvents.
+    func handleTapEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
             // The system can disable a slow/hijacked tap; re-enable it, but only if a
@@ -387,13 +393,15 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.swcs.forEach { $0.update(selection: selection) }
     }
 
-    private func clampToScreens(_ point: NSPoint) -> NSPoint {
+    // Internal (not private) so tests can exercise the clamp directly.
+    func clampToScreens(_ point: NSPoint) -> NSPoint {
         let bounds = self.screensBounds
         return NSPoint(x: min(max(point.x, bounds.minX), bounds.maxX),
                        y: min(max(point.y, bounds.minY), bounds.maxY))
     }
 
-    private static func rect(from a: NSPoint, to b: NSPoint) -> NSRect {
+    // Internal (not private) so tests can exercise the geometry directly.
+    static func rect(from a: NSPoint, to b: NSPoint) -> NSRect {
         NSRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(a.x - b.x), height: abs(a.y - b.y))
     }
 
@@ -402,7 +410,10 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
      while the tap is still active (so the app below is still frozen and its hover UI is
      intact), then we tear everything down.
      */
-    private func finishSelection(_ selection: NSRect?) {
+    // Internal (not private) so tests can exercise the minimum-size guard directly. Only
+    // the reject path (selection nil, or at/below Constants.minHintDimension) is safe to
+    // drive from a test — the accept path launches a real ScreenCaptureKit capture.
+    func finishSelection(_ selection: NSRect?) {
         guard let selection,
               selection.width > Constants.minHintDimension,
               selection.height > Constants.minHintDimension,

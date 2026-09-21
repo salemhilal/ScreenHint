@@ -340,20 +340,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         }
         let exceptedWindows = content.windows.filter { exceptingWindowIDs.contains($0.windowID) }
 
-        // Composite at the highest density in play, so a Retina slice of the selection
-        // isn't downsampled to match a 1x monitor sitting next to it. A 1x slice does get
-        // upscaled, but that only invents detail it never had — the alternative throws
-        // real pixels away.
-        let outputScale = screens.map { $0.backingScaleFactor }.max() ?? 2.0
-        let outputWidth = Int((rect.width * outputScale).rounded())
-        let outputHeight = Int((rect.height * outputScale).rounded())
-        guard outputWidth > 0, outputHeight > 0 else {
-            throw CaptureError.compositeFailed
-        }
-
-        // Capture each display's slice of the selection, paired with where that slice
-        // belongs in the finished image.
-        var pieces: [(image: CGImage, destination: CGRect)] = []
+        var captures: [DisplayCapture] = []
 
         for screen in screens {
             guard let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID,
@@ -378,6 +365,48 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
             config.showsCursor = false
 
             let fullImage = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+            captures.append(DisplayCapture(frame: screenFrame,
+                                           scale: scale,
+                                           colorSpace: screen.colorSpace?.cgColorSpace,
+                                           image: fullImage))
+        }
+
+        guard !captures.isEmpty else {
+            throw CaptureError.displayNotFound
+        }
+
+        return try Self.composite(rect, from: captures)
+    }
+
+    /**
+     Composite the given per-display captures into a single `rect`-sized image, in global
+     (bottom-left-origin) screen coordinates. Pure pixel math — no ScreenCaptureKit, no
+     `NSScreen` — so it can be exercised with synthetic displays in tests.
+     */
+    static func composite(_ rect: NSRect, from captures: [DisplayCapture]) throws -> CGImage {
+        guard !captures.isEmpty else {
+            throw CaptureError.displayNotFound
+        }
+
+        // Composite at the highest density in play, so a Retina slice of the selection
+        // isn't downsampled to match a 1x monitor sitting next to it. A 1x slice does get
+        // upscaled, but that only invents detail it never had — the alternative throws
+        // real pixels away.
+        let outputScale = captures.map { $0.scale }.max() ?? 2.0
+        let outputWidth = Int((rect.width * outputScale).rounded())
+        let outputHeight = Int((rect.height * outputScale).rounded())
+        guard outputWidth > 0, outputHeight > 0 else {
+            throw CaptureError.compositeFailed
+        }
+
+        // Capture each display's slice of the selection, paired with where that slice
+        // belongs in the finished image.
+        var pieces: [(image: CGImage, destination: CGRect)] = []
+
+        for capture in captures {
+            let screenFrame = capture.frame
+            let scale = capture.scale
+            let fullImage = capture.image
 
             // The part of the selection that actually lives on this display.
             let slice = screenFrame.intersection(rect)
@@ -424,7 +453,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
             return pieces[0].image
         }
 
-        let colorSpace = screens.first?.colorSpace?.cgColorSpace ?? CGColorSpaceCreateDeviceRGB()
+        let colorSpace = captures.first?.colorSpace ?? CGColorSpaceCreateDeviceRGB()
         guard let context = CGContext(data: nil,
                                       width: outputWidth,
                                       height: outputHeight,
@@ -500,5 +529,14 @@ enum CaptureError: Error {
     case displayNotFound
     /// The per-display captures succeeded but compositing them into one image failed.
     case compositeFailed
+}
+
+/// One display's contribution to a capture: where it sits in global (bottom-left origin)
+/// screen coordinates, its backing scale, and a full-display image at native pixel density.
+struct DisplayCapture {
+    let frame: NSRect
+    let scale: CGFloat
+    let colorSpace: CGColorSpace?
+    let image: CGImage
 }
 
