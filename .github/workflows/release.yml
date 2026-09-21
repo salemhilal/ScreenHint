@@ -1,8 +1,9 @@
 name: Release
 
 # Cut a release by pushing a tag:  git tag v1.6.0 && git push origin v1.6.0
-# Builds a Developer ID signed, notarized, stapled ScreenHint.app and attaches
-# it to the GitHub release as a zip. Does not touch the App Store build.
+# Runs the test suite as a gate, then builds a Developer ID signed, notarized,
+# stapled ScreenHint.app and attaches it to the GitHub release as a zip.
+# Does not touch the App Store build.
 on:
   push:
     tags:
@@ -100,6 +101,27 @@ jobs:
           xcodebuild -resolvePackageDependencies \
             -project "$PROJECT" \
             -scheme "$SCHEME"
+
+      - name: Run tests
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -resultBundlePath "$RUNNER_TEMP/TestResults.xcresult" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            ENABLE_HARDENED_RUNTIME=NO
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ${{ runner.temp }}/TestResults.xcresult
 
       - name: Archive
         run: |
