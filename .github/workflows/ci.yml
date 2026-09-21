@@ -1,6 +1,10 @@
 name: CI
 
-# Fast build check. No signing secrets, so this also runs safely on forks.
+# Build and run the test suite. No signing secrets, so this also runs safely on forks.
+# LiveCaptureTests needs Screen Recording permission and a real display; it self-skips
+# cleanly on this runner (no permission, no way to grant one non-interactively) rather
+# than failing — the deterministic suites (CompositeTests, SelectionGeometryTests,
+# EventTapTests, HintRenderingTests) still run and catch real regressions.
 on:
   push:
     branches: [main]
@@ -33,15 +37,23 @@ jobs:
           key: spm-${{ runner.os }}-${{ hashFiles('ScreenHint.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: spm-${{ runner.os }}-
 
-      - name: Build
+      - name: Build and test
         run: |
           set -euo pipefail
-          xcodebuild build \
+          xcodebuild test \
             -project ScreenHint.xcodeproj \
             -scheme ScreenHint \
             -configuration Debug \
             -destination 'platform=macOS' \
+            -resultBundlePath "$RUNNER_TEMP/TestResults.xcresult" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             ENABLE_HARDENED_RUNTIME=NO
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ${{ runner.temp }}/TestResults.xcresult
