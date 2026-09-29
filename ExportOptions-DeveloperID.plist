@@ -3,7 +3,8 @@
 <plist version="1.0">
 <dict>
 	<!-- Direct-download build: signed with Developer ID, notarized separately
-	     by the release workflow. The Mac App Store build does NOT use this file. -->
+	     by the release workflow. The Mac App Store build uses
+	     ExportOptions-AppStore.plist instead. -->
 	<key>method</key>
 	<string>developer-id</string>
 	<key>teamID</key>
