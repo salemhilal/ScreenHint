@@ -32,6 +32,7 @@
 		FC6552B53060806C00736982 /* SelectionGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6552B43060806C00736982 /* SelectionGeometryTests.swift */; };
 		FC6552B7306080C900736982 /* EventTapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6552B6306080C900736982 /* EventTapTests.swift */; };
 		FC6552B93060812800736982 /* HintRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6552B83060812800736982 /* HintRenderingTests.swift */; };
+		FC6552BB3060812800736982 /* CopyFeedbackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6552BA3060812800736982 /* CopyFeedbackTests.swift */; };
 		FC6552BB306081A900736982 /* LiveCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6552BA306081A900736982 /* LiveCaptureTests.swift */; };
 		FCE7562F2A5B460A00E98AC2 /* SwiftUIPager in Frameworks */ = {isa = PBXBuildFile; productRef = FCE7562E2A5B460A00E98AC2 /* SwiftUIPager */; };
 		FCF1C49E285E5D1600A87813 /* HintWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF1C49D285E5D1600A87813 /* HintWindow.swift */; };
@@ -100,6 +101,7 @@
 		FC6552B43060806C00736982 /* SelectionGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionGeometryTests.swift; sourceTree = "<group>"; };
 		FC6552B6306080C900736982 /* EventTapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTapTests.swift; sourceTree = "<group>"; };
 		FC6552B83060812800736982 /* HintRenderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintRenderingTests.swift; sourceTree = "<group>"; };
+		FC6552BA3060812800736982 /* CopyFeedbackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyFeedbackTests.swift; sourceTree = "<group>"; };
 		FC6552BA306081A900736982 /* LiveCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveCaptureTests.swift; sourceTree = "<group>"; };
 		FCF1C49D285E5D1600A87813 /* HintWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintWindow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -230,6 +232,7 @@
 				FC6552B6306080C900736982 /* EventTapTests.swift */,
 				FC6552B83060812800736982 /* HintRenderingTests.swift */,
 				FC6552C23060812800736982 /* PermissionsTests.swift */,
+				FC6552BA3060812800736982 /* CopyFeedbackTests.swift */,
 				FC6552BA306081A900736982 /* LiveCaptureTests.swift */,
 			);
 			path = ScreenHintTests;
@@ -463,6 +466,7 @@
 				FC6552B130607EB200736982 /* TestSupport.swift in Sources */,
 				FC6552B93060812800736982 /* HintRenderingTests.swift in Sources */,
 				FC6552C33060812800736982 /* PermissionsTests.swift in Sources */,
+				FC6552BB3060812800736982 /* CopyFeedbackTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
