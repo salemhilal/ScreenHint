@@ -161,7 +161,7 @@ class HintWindow: NSWindow {
 
 
 /**
- A small dark pill with a line of text, used for brief confirmations like "Copied". It ignores
+ A small dark label with a line of text, used for brief confirmations like "Copied". It ignores
  the mouse so dragging and right-clicking the hint work straight through it.
  */
 class HintBadgeView: NSView {
@@ -174,15 +174,16 @@ class HintBadgeView: NSView {
         self.label.textColor = .white
         self.label.sizeToFit()
 
-        let padding = NSSize(width: 10, height: 4)
+        let padding = NSSize(width: 8, height: 5)
         let size = NSSize(width: ceil(self.label.frame.width) + padding.width * 2,
                           height: ceil(self.label.frame.height) + padding.height * 2)
         super.init(frame: NSRect(origin: .zero, size: size))
 
         self.wantsLayer = true
         self.layer?.backgroundColor = CGColor(gray: 0, alpha: 0.75)
-        self.layer?.cornerRadius = size.height / 2
-        // A faint light edge keeps the pill visible on dark hints.
+        // Squared-off with slightly rounded corners, like the box around "hint" in the logo.
+        self.layer?.cornerRadius = 3
+        // A faint light edge keeps the badge visible on dark hints.
         self.layer?.borderWidth = 1
         self.layer?.borderColor = CGColor(gray: 1, alpha: 0.25)
         self.label.setFrameOrigin(NSPoint(x: padding.width, y: padding.height))
