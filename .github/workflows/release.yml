@@ -3,7 +3,9 @@ name: Release
 # Cut a release by pushing a tag:  git tag v1.6.0 && git push origin v1.6.0
 # Runs the test suite as a gate, then builds a Developer ID signed, notarized,
 # stapled ScreenHint.app and attaches it to the GitHub release as a zip.
-# Does not touch the App Store build.
+# Finally, re-signs the same archive for the Mac App Store and uploads it to
+# App Store Connect, where it shows up in TestFlight and can be submitted
+# for review.
 on:
   push:
     tags:
@@ -22,6 +24,11 @@ env:
   SCHEME: ScreenHint
   APP_NAME: ScreenHint
   TEAM_ID: S3979WFPKR
+  # App Store Connect only accepts build numbers higher than any build already
+  # uploaded, including ones uploaded by hand from Xcode (the project is at 15).
+  # CI build numbers are the run number plus this offset, so they always clear
+  # the manual ones.
+  BUILD_NUMBER_OFFSET: 100
 
 jobs:
   release:
@@ -48,8 +55,9 @@ jobs:
           VERSION="${TAG#v}"
           echo "tag=$TAG"         >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "build=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
-          echo "Building $VERSION (build ${{ github.run_number }}) from $TAG"
+          BUILD=$(( ${{ github.run_number }} + BUILD_NUMBER_OFFSET ))
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "Building $VERSION (build $BUILD) from $TAG"
 
       - name: Set up signing keychain
         env:
@@ -204,6 +212,22 @@ jobs:
               --title "$TAG" \
               --generate-notes
           fi
+
+      # Runs after the GitHub release so an App Store Connect problem never
+      # holds up the direct download. Exporting with destination=upload
+      # re-signs the archive with an Apple Distribution certificate (cloud-
+      # managed, via the API key) and uploads it in one step.
+      - name: Upload to App Store Connect
+        run: |
+          set -euo pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/$APP_NAME.xcarchive" \
+            -exportOptionsPlist ExportOptions-AppStore.plist \
+            -exportPath "$RUNNER_TEMP/export-appstore" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}"
 
       - name: Clean up keychain
         if: always()

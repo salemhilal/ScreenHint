@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Mac App Store build: re-signs the release archive for distribution and
+	     uploads it straight to App Store Connect. Signing is automatic, using
+	     Apple's cloud-managed distribution certificates through the API key, so
+	     CI doesn't need a separate distribution certificate. -->
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>upload</string>
+	<key>teamID</key>
+	<string>S3979WFPKR</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<!-- The workflow sets the version and build number from the tag and run. -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+	<key>uploadSymbols</key>
+	<true/>
+</dict>
+</plist>
