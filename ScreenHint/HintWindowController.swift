@@ -55,7 +55,7 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         /// These menu items are commands that can be taken on the hint
         ///
         
-        let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "C")
+        let copyItem = menu.addItem(withTitle: "Copy", action:#selector(self.menuCopyHandler(_:)), keyEquivalent: "c")
         copyItem.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
         copyItem.keyEquivalentModifierMask = [.command]
         copyItem.target = self
@@ -208,7 +208,8 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         
         let image = NSImage.init(cgImage: screenshot, size: self.window!.frame.size)
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.writeObjects([image])
+        let didCopy = NSPasteboard.general.writeObjects([image])
+        self.hintWindow.showBadge(didCopy ? "Copied" : "Couldn't copy")
     }
     
     /**
@@ -222,19 +223,61 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     }
     
     /**
-     Attempts to extract text from the current screenshot and then copies it to the clipboard (in `handleRecognizeText`).
+     Extracts text from the current screenshot and copies it to the clipboard. Recognition runs
+     off the main thread, since it can take a moment on a large hint.
      */
     func shouldCopyText() {
-        guard let cgImage = self.screenshot else { return }
-        let requestHandler = VNImageRequestHandler(cgImage: cgImage)
-        let request = VNRecognizeTextRequest(completionHandler: handleRecognizeText)
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
-        do {
-            try requestHandler.perform([request])
-        } catch {
-            print("Unable to perform the requests: \(error).")
+        guard let screenshot = self.screenshot else { return }
+        DispatchQueue.global(qos: .userInitiated).async {
+            let lines = Self.recognizeText(in: screenshot)
+            DispatchQueue.main.async {
+                self.copyText(lines)
+            }
         }
+    }
+
+    /**
+     Puts recognized text on the clipboard and confirms it with a badge. If there's no text, the
+     clipboard is left alone, so a failed Copy Text doesn't wipe out whatever was there before.
+     Returns whether anything was copied.
+     */
+    @discardableResult
+    func copyText(_ lines: [String]) -> Bool {
+        guard !lines.isEmpty else {
+            self.hintWindow.showBadge("No text found")
+            return false
+        }
+        NSPasteboard.general.clearContents()
+        let didCopy = NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
+        self.hintWindow.showBadge(didCopy ? "Text copied" : "Couldn't copy text")
+        return didCopy
+    }
+
+    /**
+     Recognizes the lines of text in `image`, top to bottom.
+
+     `.accurate` recognition occasionally returns no results at all, with no error, for images
+     with perfectly readable text. It depends only on the image's dimensions (wide images, 2400px
+     and up, are the usual victims), so retrying doesn't help and neither does downscaling. `.fast`
+     reads those same images fine, so fall back to it whenever `.accurate` comes up empty.
+     */
+    static func recognizeText(in image: CGImage) -> [String] {
+        for level in [VNRequestTextRecognitionLevel.accurate, .fast] {
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = level
+            request.usesLanguageCorrection = true
+            do {
+                try VNImageRequestHandler(cgImage: image).perform([request])
+            } catch {
+                print("Text recognition (\(level == .accurate ? "accurate" : "fast")) failed: \(error)")
+                continue
+            }
+            let lines = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+            if !lines.isEmpty {
+                return lines
+            }
+        }
+        return []
     }
     
     /**
@@ -282,26 +325,6 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     }
     
     
-    /**
-     Callback for VisionKit's text recognition process.
-     */
-    func handleRecognizeText(request: VNRequest, error: Error?) {
-        guard let observations =
-                request.results as? [VNRecognizedTextObservation] else {
-            return
-        }
-        let recognizedStrings = observations.compactMap { observation in
-            // Return the string of the top VNRecognizedText instance.
-            return observation.topCandidates(1).first?.string
-        }
-        
-        // Process the recognized strings.
-        print(recognizedStrings)
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(recognizedStrings.joined(separator: "\n"), forType: .string)
-
-    }
-
     override func rightMouseUp(with event: NSEvent) {
         let point = NSEvent.mouseLocation;
         self.window!.menu?.popUp(positioning: nil, at: point, in: nil)

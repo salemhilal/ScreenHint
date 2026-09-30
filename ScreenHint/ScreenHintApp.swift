@@ -74,8 +74,10 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             UserDefaults.standard.set(false, forKey:"isFirstLaunch")
         }
                 
-        // Register our launcher app as a login item
-        if (self.openAtLogin) {
+        // Register our launcher app as a login item. Not during tests, though: the test host is
+        // a throwaway (often unsigned) build, and registering it would point the login item at
+        // that copy, which macOS then refuses to open as "damaged".
+        if (self.openAtLogin && !isRunningTests) {
             SMLoginItemSetEnabled(AppIds.launcher as CFString, true)
         }
         

@@ -101,8 +101,10 @@ class SecretWindowController: NSWindowController {
         secretWindow.isMovable = false
         secretWindow.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
 
-        // Keep this window out of the screenshots we (and other apps) take.
-        secretWindow.sharingType = .none
+        // Let the overlay show up in screen recordings and screenshots, so demo videos and
+        // bug-report recordings show the selection step. Our own captures still leave it out:
+        // captureImage(of:) excludes every ScreenHint window (see LiveCaptureTests).
+        secretWindow.sharingType = .readOnly
 
         let overlayView = OverlayView(frame: NSRect(origin: .zero, size: screen.frame.size))
         overlayView.screenFrame = screen.frame

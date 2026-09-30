@@ -47,6 +47,18 @@ class HintWindow: NSWindow {
     }
     
     /**
+     Route the context menu's shortcuts (Copy Text, Hide Borders, ...). AppKit only matches key
+     equivalents against the main menu, and as a menu-bar app we don't have one, so without this
+     the shortcuts listed in a hint's menu never fire.
+     */
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if self.menu?.performKeyEquivalent(with: event) == true {
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
+    /**
      Handle keyboard shortcuts
      */
     override func keyDown(with event: NSEvent) {
@@ -100,6 +112,90 @@ class HintWindow: NSWindow {
 
     var imageViewLayer: CALayer? {
         (contentView?.subviews.first as? WindowDraggableImageView)?.layer
+    }
+
+    /// The badge currently on screen, if any.
+    private(set) var badge: HintBadgeView?
+
+    /**
+     Briefly show a small badge (e.g. "Copied") in the middle of the hint, then fade it out.
+     Showing a new badge replaces any that's still visible.
+     */
+    func showBadge(_ text: String, duration: TimeInterval = 1.2) {
+        guard let contentView = self.contentView else { return }
+        self.badge?.removeFromSuperview()
+
+        let badge = HintBadgeView(text: text)
+        badge.setFrameOrigin(NSPoint(x: (contentView.bounds.width - badge.frame.width) / 2,
+                                     y: (contentView.bounds.height - badge.frame.height) / 2))
+        // Stay centered if the hint is resized while the badge is up.
+        badge.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin, .maxYMargin]
+        contentView.addSubview(badge)
+        self.badge = badge
+
+        // VoiceOver users can't see the badge, so say it too.
+        NSAccessibility.post(element: self,
+                             notification: .announcementRequested,
+                             userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.high.rawValue])
+
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        let fade: TimeInterval = reduceMotion ? 0 : 0.15
+        badge.alphaValue = 0
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = fade
+            badge.animator().alphaValue = 1
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self, weak badge] in
+            guard let badge = badge else { return }
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = fade
+                badge.animator().alphaValue = 0
+            }, completionHandler: {
+                badge.removeFromSuperview()
+                if self?.badge === badge { self?.badge = nil }
+            })
+        }
+    }
+}
+
+
+/**
+ A small dark label with a line of text, used for brief confirmations like "Copied". It ignores
+ the mouse so dragging and right-clicking the hint work straight through it.
+ */
+class HintBadgeView: NSView {
+
+    let label: NSTextField
+
+    init(text: String) {
+        self.label = NSTextField(labelWithString: text)
+        self.label.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        self.label.textColor = .white
+        self.label.sizeToFit()
+
+        let padding = NSSize(width: 8, height: 5)
+        let size = NSSize(width: ceil(self.label.frame.width) + padding.width * 2,
+                          height: ceil(self.label.frame.height) + padding.height * 2)
+        super.init(frame: NSRect(origin: .zero, size: size))
+
+        self.wantsLayer = true
+        self.layer?.backgroundColor = CGColor(gray: 0, alpha: 0.75)
+        // Squared-off with slightly rounded corners, like the box around "hint" in the logo.
+        self.layer?.cornerRadius = 3
+        // A faint light edge keeps the badge visible on dark hints.
+        self.layer?.borderWidth = 1
+        self.layer?.borderColor = CGColor(gray: 1, alpha: 0.25)
+        self.label.setFrameOrigin(NSPoint(x: padding.width, y: padding.height))
+        self.addSubview(self.label)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
     }
 }
 
