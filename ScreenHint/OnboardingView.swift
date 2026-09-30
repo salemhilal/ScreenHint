@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftUIPager
+import AVFoundation
 
 enum OnboardingPage: CaseIterable {
     case welcome, makeHint, useHint, settings, thanks
@@ -63,11 +64,8 @@ struct OnboardingMakeHintView: View {
         VStack {
             VStack(alignment: .leading) {
                 
-                Image("Onboarding.NewHint")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .cornerRadius(5)
-                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth:1))
+                DemoVideoView(isActive: page.index == OnboardingPage.allCases.firstIndex(of: .makeHint))
+                    .aspectRatio(DemoVideoView.aspectRatio, contentMode: .fit)
                     .padding(.vertical)
                 
                 Text("A hint is a floating screenshot.")
@@ -111,6 +109,108 @@ struct OnboardingMakeHintView: View {
             }
             .padding()
         }
+    }
+}
+
+/**
+ The demo video from screenhint.com's home page: making a hint, dragging it aside, and double-clicking
+ it away. It has no controls. It plays once each time its page comes into view (unless Reduce Motion
+ is on) and stops on its last frame, which matches the first; clicking it plays it again.
+ */
+struct DemoVideoView: NSViewRepresentable {
+    static let aspectRatio: CGFloat = 800 / 464
+
+    var isActive: Bool
+
+    func makeNSView(context: Context) -> DemoVideoPlayerView {
+        DemoVideoPlayerView()
+    }
+
+    func updateNSView(_ view: DemoVideoPlayerView, context: Context) {
+        view.setActive(isActive)
+    }
+}
+
+final class DemoVideoPlayerView: NSView {
+    private let player: AVPlayer?
+    private var isActive = false
+
+    init() {
+        if let url = Bundle.main.url(forResource: "Onboarding.Demo", withExtension: "mp4") {
+            player = AVPlayer(url: url)
+        } else {
+            player = nil
+        }
+        super.init(frame: .zero)
+
+        player?.isMuted = true
+        player?.actionAtItemEnd = .pause
+
+        // Layer-hosting view: the player layer is the view's layer. Rounded and outlined to match
+        // the tour's other illustrations.
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.videoGravity = .resizeAspect
+        playerLayer.cornerRadius = 5
+        playerLayer.masksToBounds = true
+        playerLayer.borderWidth = 1
+        playerLayer.borderColor = NSColor.gray.cgColor
+        layer = playerLayer
+        wantsLayer = true
+
+        setAccessibilityElement(true)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel("Video: a keyboard shortcut dims the screen, part of the Weather app is selected and becomes a floating hint, the hint is dragged aside, and a double-click closes it.")
+        setAccessibilityHelp("Plays the video again")
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    /// Play from the start when the page comes into view, and pause when it leaves.
+    func setActive(_ active: Bool) {
+        guard active != isActive else { return }
+        isActive = active
+        if active {
+            if !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+                playFromStart()
+            }
+        } else {
+            player?.pause()
+        }
+    }
+
+    private func playFromStart() {
+        player?.seek(to: .zero)
+        player?.play()
+    }
+
+    private var isPlaying: Bool {
+        (player?.rate ?? 0) != 0
+    }
+
+    /// Click: pause if playing, otherwise play (from the start if it has finished).
+    func togglePlayback() {
+        if isPlaying {
+            player?.pause()
+        } else if let item = player?.currentItem, item.currentTime() >= item.duration {
+            playFromStart()
+        } else {
+            player?.play()
+        }
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        togglePlayback()
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        togglePlayback()
+        return true
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .pointingHand)
     }
 }
 
