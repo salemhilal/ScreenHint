@@ -13,6 +13,9 @@ enum OnboardingPage: CaseIterable {
     case welcome, makeHint, useHint, settings, thanks
 }
 
+/// Width of each tour page's text and illustration column.
+private let onboardingContentWidth: CGFloat = 480
+
 struct OnboardingWelcomeView: View {
     @ObservedObject var page: Page
     
@@ -29,7 +32,7 @@ struct OnboardingWelcomeView: View {
                 If you already know how to use ScreenHint, or if you would rather show yourself around, you can close this guide and access it later from the toolbar menu.
                 """)
                 .font(.system(.title3))
-                .frame(width:350)
+                .frame(width: onboardingContentWidth)
             Spacer()
             Spacer()
             HStack {
@@ -83,7 +86,7 @@ struct OnboardingMakeHintView: View {
                     """)
                     .font(.system(.title3))
             }
-            .frame(width:350)
+            .frame(width: onboardingContentWidth)
             
             Spacer()
             
@@ -146,15 +149,21 @@ final class DemoVideoPlayerView: NSView {
         player?.isMuted = true
         player?.actionAtItemEnd = .pause
 
-        // Layer-hosting view: the player layer is the view's layer. Rounded and outlined to match
-        // the tour's other illustrations.
+        // Layer-hosting view: a plain container holding the player layer, rounded and outlined to
+        // match the tour's other illustrations. The video ignores cornerRadius/masksToBounds
+        // clipping (on the player layer or the container), so the corners come from a mask.
+        let container = CALayer()
+        container.borderWidth = 1
+        container.borderColor = NSColor.gray.cgColor
+        container.cornerRadius = 5
+        container.mask = cornerMask
+
         let playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = .resizeAspect
-        playerLayer.cornerRadius = 5
-        playerLayer.masksToBounds = true
-        playerLayer.borderWidth = 1
-        playerLayer.borderColor = NSColor.gray.cgColor
-        layer = playerLayer
+        playerLayer.videoGravity = .resizeAspectFill
+        playerLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        container.addSublayer(playerLayer)
+
+        layer = container
         wantsLayer = true
 
         setAccessibilityElement(true)
@@ -165,6 +174,15 @@ final class DemoVideoPlayerView: NSView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    /// Rounds the video's corners; sized to the view in `layout()`.
+    private let cornerMask = CAShapeLayer()
+
+    override func layout() {
+        super.layout()
+        cornerMask.frame = bounds
+        cornerMask.path = CGPath(roundedRect: bounds, cornerWidth: 5, cornerHeight: 5, transform: nil)
     }
 
     /// Play from the start when the page comes into view, and pause when it leaves.
@@ -243,7 +261,7 @@ struct OnboardingUseHintView: View {
                     .font(.system(.title3))
                 
             }
-            .frame(width:350)
+            .frame(width: onboardingContentWidth)
             
             Spacer()
             
@@ -302,7 +320,7 @@ struct OnboardingSettingsView: View {
                     .font(.system(.title3))
                 
             }
-            .frame(width:350)
+            .frame(width: onboardingContentWidth)
             
             Spacer()
             
@@ -345,7 +363,7 @@ struct OnboardingThanksView: View {
                 If you have questions, thoughts, or suggestions, you can find us at [screenhint@salem.io](mailto:screenhint@salem.io) or on twitter at [@screenhint](https://twitter.com/screenhint)
                 """)
                 .font(.system(.title3))
-                .frame(width:350)
+                .frame(width: onboardingContentWidth)
             Spacer()
             Spacer()
             HStack {
@@ -396,12 +414,16 @@ struct OnboardingView: View {
                 case .thanks:
                     OnboardingThanksView(page: page)
                 }
-            }.background(.clear)
+            }
+            .background(.clear)
+            // SwiftUIPager makes the page stack focusable on macOS so the arrow keys can flip pages;
+            // keep that, but don't draw a focus ring around the whole tour.
+            .focusEffectDisabled()
             
             
             
             
-        }.padding(.vertical).frame(width: 450, height: 580)
+        }.padding(.vertical).frame(width: 600, height: 720)
         
     }
     
