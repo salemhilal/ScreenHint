@@ -9,10 +9,10 @@
 //  missing.
 //
 //  A window created by this test process belongs to the same running application as
-//  ScreenHint.app itself (same PID), so captureImage's own-app exclusion applies to our
-//  fixture windows too, exactly as it would to a real hint window — every capture below has
-//  to explicitly except the fixture's window ID to see it at all, which is itself part of
-//  what's under test.
+//  ScreenHint.app itself (same PID), so a fixture window stands in for any of ScreenHint's own
+//  windows (a hint, Settings, About, the tour). Those are captured like anything else; only
+//  the window IDs passed as `excludingWindowIDs` (in the app, the capture overlays) are left
+//  out, which is itself part of what's under test.
 //
 //  There's no live hover-preservation test here. The production tap protects hover in OTHER
 //  processes' windows sitting under the overlay (Safari, Finder, etc.) — a same-process
@@ -30,7 +30,9 @@ import AppKit
 import Testing
 @testable import ScreenHint
 
-@Suite("Live capture", .enabled(if: CGPreflightScreenCaptureAccess() && !NSScreen.screens.isEmpty))
+// Serialized: each test puts an identical fixture window at the same spot, and since our own
+// windows are captured, one test's fixture would show through another's exclusion.
+@Suite("Live capture", .enabled(if: CGPreflightScreenCaptureAccess() && !NSScreen.screens.isEmpty), .serialized)
 struct LiveCaptureTests {
 
     /// A rect roughly centered on the main screen, away from the menu bar and Dock.
@@ -41,7 +43,7 @@ struct LiveCaptureTests {
                      width: size.width, height: size.height)
     }
 
-    @Test("a real capture matches the screen's density, avoids resampling, and respects window exceptions")
+    @Test("a real capture matches the screen's density, avoids resampling, includes our own windows, and respects exclusions")
     @MainActor
     func captureReflectsRealScreenContent() async throws {
         let rect = Self.fixtureRect()
@@ -53,14 +55,14 @@ struct LiveCaptureTests {
         let fixtureID = CGWindowID(fixture.window.windowNumber)
         let scale = NSScreen.screens.first!.backingScaleFactor
 
-        // Default exclusion: our own window (this test process shares ScreenHint.app's PID)
-        // is excluded, so the capture shows whatever's actually behind it, not the fixture.
-        let excludedImage = try await HintWindowController.captureImage(of: rect)
-        let excludedReader = PixelReader(excludedImage)
-
-        // Explicit exception: the fixture becomes visible in the capture.
-        let includedImage = try await HintWindowController.captureImage(of: rect, exceptingWindowIDs: [fixtureID])
+        // By default our own window (this test process shares ScreenHint.app's PID) is
+        // captured, the same as Settings, About, or the tour would be.
+        let includedImage = try await HintWindowController.captureImage(of: rect)
         let includedReader = PixelReader(includedImage)
+
+        // Explicit exclusion: the capture shows whatever's actually behind the fixture.
+        let excludedImage = try await HintWindowController.captureImage(of: rect, excludingWindowIDs: [fixtureID])
+        let excludedReader = PixelReader(excludedImage)
 
         #expect(includedImage.width == Int((rect.width * scale).rounded()))
         #expect(includedImage.height == Int((rect.height * scale).rounded()))
@@ -76,7 +78,7 @@ struct LiveCaptureTests {
         #expect(includedReader[w - 1 - markerPixels / 2, h - 1 - markerPixels / 2].isClose(to: TestColor.yellow, tolerance: 8))
 
         // Whatever the "excluded" capture shows, it isn't all four of our markers — proof
-        // the default exclusion actually removed our window rather than no-oping.
+        // the exclusion actually removed our window rather than no-oping.
         let excludedMatchesAllMarkers =
             excludedReader[markerPixels / 2, markerPixels / 2].isClose(to: TestColor.red, tolerance: 8) &&
             excludedReader[w - 1 - markerPixels / 2, markerPixels / 2].isClose(to: TestColor.green, tolerance: 8) &&
@@ -93,7 +95,6 @@ struct LiveCaptureTests {
         let fixture = FixtureWindow(rect: rect, content: view)
         defer { fixture.close() }
         await fixture.show()
-        let fixtureID = CGWindowID(fixture.window.windowNumber)
 
         // Show the real dimming overlay over the fixture's screen, with its selection
         // rect matching the fixture exactly (worst case: the overlay's white stroke sits
@@ -104,7 +105,10 @@ struct LiveCaptureTests {
         swc.update(selection: rect)
         try await Task.sleep(nanoseconds: 200_000_000)
 
-        let image = try await HintWindowController.captureImage(of: rect, exceptingWindowIDs: [fixtureID])
+        // Exclude the overlay's window the way the app does; the fixture underneath (one of
+        // "our own" windows) should come through untouched.
+        let overlayID = CGWindowID(try #require(swc.window).windowNumber)
+        let image = try await HintWindowController.captureImage(of: rect, excludingWindowIDs: [overlayID])
         let reader = PixelReader(image)
         let scale = NSScreen.screens.first!.backingScaleFactor
         let markerPixels = Int(view.markerSize * scale) - 1
@@ -114,5 +118,30 @@ struct LiveCaptureTests {
         // would blow well past this tolerance, which only accounts for ordinary capture noise.
         #expect(reader[markerPixels / 2, markerPixels / 2].isClose(to: TestColor.red, tolerance: 8))
         #expect(reader[reader.width - 1 - markerPixels / 2, markerPixels / 2].isClose(to: TestColor.green, tolerance: 8))
+    }
+
+    @Test("if a window to exclude can't be found, the whole app is excluded rather than risk the overlay leaking")
+    @MainActor
+    func unknownExclusionFallsBackToExcludingTheApp() async throws {
+        let rect = Self.fixtureRect()
+        let view = FixtureView(frame: NSRect(origin: .zero, size: rect.size))
+        let fixture = FixtureWindow(rect: rect, content: view)
+        defer { fixture.close() }
+        await fixture.show()
+
+        // A window ID that isn't on screen: captureImage can't exclude it individually, so it
+        // should fall back to excluding every ScreenHint window, the fixture included.
+        let image = try await HintWindowController.captureImage(of: rect, excludingWindowIDs: [CGWindowID.max])
+        let reader = PixelReader(image)
+        let scale = NSScreen.screens.first!.backingScaleFactor
+        let markerPixels = Int(view.markerSize * scale) - 1
+        let w = reader.width, h = reader.height
+
+        let showsAllMarkers =
+            reader[markerPixels / 2, markerPixels / 2].isClose(to: TestColor.red, tolerance: 8) &&
+            reader[w - 1 - markerPixels / 2, markerPixels / 2].isClose(to: TestColor.green, tolerance: 8) &&
+            reader[markerPixels / 2, h - 1 - markerPixels / 2].isClose(to: TestColor.blue, tolerance: 8) &&
+            reader[w - 1 - markerPixels / 2, h - 1 - markerPixels / 2].isClose(to: TestColor.yellow, tolerance: 8)
+        #expect(!showsAllMarkers)
     }
 }

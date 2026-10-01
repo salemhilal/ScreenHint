@@ -365,14 +365,14 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, NSMenuDelegat
      display and cropping would yield an image smaller than the hint window, which the
      window then stretches to fit.
 
-     This uses ScreenCaptureKit and excludes ScreenHint's own windows from the capture,
-     so neither the dimmed overlay nor the (not-yet-populated) hint window land in the
-     image. Because we exclude by application, the capture can run while the overlay is
-     still up and the app underneath is still starved of mouse events — which means the
-     hover-triggered UI the user was pointing at is genuinely still on screen at capture
-     time.
+     This uses ScreenCaptureKit and leaves `excludingWindowIDs` (the dimmed capture overlays)
+     out of the image. Everything else is captured as it appears on screen, including
+     ScreenHint's own windows: existing hints, Settings, About, and the tour. Because the
+     overlay is excluded rather than hidden, the capture can run while it's still up and the
+     app underneath is still starved of mouse events — which means the hover-triggered UI the
+     user was pointing at is genuinely still on screen at capture time.
      */
-    static func captureImage(of rect: NSRect, exceptingWindowIDs: [CGWindowID] = []) async throws -> CGImage {
+    static func captureImage(of rect: NSRect, excludingWindowIDs: [CGWindowID] = []) async throws -> CGImage {
         // Every display the selection touches, not just the one it started on.
         let screens = NSScreen.screens.filter { $0.frame.intersects(rect) }
         guard !screens.isEmpty else {
@@ -381,12 +381,15 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, NSMenuDelegat
 
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
 
-        // Exclude our own process so the overlay chrome never shows up in the shot, but
-        // make exceptions for existing hint windows so they can be captured inside new hints.
-        let ourApp = content.applications.first {
+        let excludedWindows = content.windows.filter { excludingWindowIDs.contains($0.windowID) }
+
+        // If a window we were asked to exclude isn't in the shareable content, we can't leave it
+        // out by itself. Fall back to excluding our whole app, so the overlay's dimming can
+        // never end up in a hint.
+        let foundEveryWindow = Set(excludedWindows.map(\.windowID)) == Set(excludingWindowIDs)
+        let ourApp = foundEveryWindow ? nil : content.applications.first {
             $0.processID == ProcessInfo.processInfo.processIdentifier
         }
-        let exceptedWindows = content.windows.filter { exceptingWindowIDs.contains($0.windowID) }
 
         var captures: [DisplayCapture] = []
 
@@ -396,9 +399,11 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, NSMenuDelegat
                 continue
             }
 
-            let filter = SCContentFilter(display: display,
-                                         excludingApplications: ourApp.map { [$0] } ?? [],
-                                         exceptingWindows: exceptedWindows)
+            let filter = if let ourApp {
+                SCContentFilter(display: display, excludingApplications: [ourApp], exceptingWindows: [])
+            } else {
+                SCContentFilter(display: display, excludingWindows: excludedWindows)
+            }
 
             let screenFrame = screen.frame
             let scale = screen.backingScaleFactor
