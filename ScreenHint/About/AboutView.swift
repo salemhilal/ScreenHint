@@ -22,7 +22,7 @@ struct AboutView: View {
                 Version \(self.version) (Build \(self.build))
                 
                 
-                Need help? [Email us](mailto:screenhint@salem.io) or [message us on Twitter](https://twitter.com/screenhint).
+                Need help? [Email us](mailto:screenhint@salem.io).
                 """).multilineTextAlignment(.center)
 
         }.padding()
