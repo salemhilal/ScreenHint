@@ -351,33 +351,10 @@ struct OnboardingSettingsView: View {
         VStack {
             VStack(alignment: .leading) {
 
-                // The recorder is this page's centerpiece, in the spot the other pages give their
-                // illustration.
-                VStack(spacing: 12) {
-                    Text("Set it here:")
-                        .font(.system(.title3))
-                    // Only in the view tree while this page is showing. The pager keeps other
-                    // pages in the window, and a recorder on a page you can't see could still take
-                    // keyboard focus (Tab) and silently record or clear the shortcut.
-                    Group {
-                        if isCurrentPage {
-                            LargeShortcutRecorder()
-                        } else {
-                            Color.clear
-                        }
-                    }
-                    .frame(width: 240, height: 30)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
-                .background(RoundedRectangle(cornerRadius: 5).fill(Color.primary.opacity(0.04)))
-                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth: 1))
-                .padding(.vertical)
-
                 Text("Set a global keyboard shortcut.")
                     .font(.system(.title, design: .rounded))
                     .fontWeight(.semibold)
-                    .padding(.bottom)
+                    .padding(.vertical)
                 
                 Text("""
                     ScreenHint works best when it's close at hand.
@@ -400,6 +377,28 @@ struct OnboardingSettingsView: View {
                     Text("works really well.")
                 }
                 .font(.system(.title3))
+
+                // The recorder is this page's centerpiece, below the text that introduces it.
+                VStack(spacing: 12) {
+                    Text("Set it here:")
+                        .font(.system(.title3))
+                    // Only in the view tree while this page is showing. The pager keeps other
+                    // pages in the window, and a recorder on a page you can't see could still take
+                    // keyboard focus (Tab) and silently record or clear the shortcut.
+                    Group {
+                        if isCurrentPage {
+                            LargeShortcutRecorder()
+                        } else {
+                            Color.clear
+                        }
+                    }
+                    .frame(width: 240, height: 30)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+                .background(RoundedRectangle(cornerRadius: 5).fill(Color.primary.opacity(0.04)))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth: 1))
+                .padding(.top)
             }
             .frame(width: onboardingContentWidth)
             
