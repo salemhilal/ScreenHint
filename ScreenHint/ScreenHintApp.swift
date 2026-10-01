@@ -26,6 +26,10 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // Held so the menu can pause the (legacy) HotKey binding while it's open.
     var hotKey: HotKey?
 
+    // Settings, About, and the tour each get a single window, held here while it's open.
+    private enum AppWindow { case onboarding, about, settings }
+    private var appWindows: [AppWindow: NSWindow] = [:]
+
     // Carbon hotkey used to cancel an in-progress capture with the Escape key. We use a
     // Carbon hotkey (rather than an NSEvent monitor or a key window) because it's
     // consumed system-wide without our overlay taking key focus — taking key focus would
@@ -126,7 +130,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.activate(ignoringOtherApps: true)
         
         // Show the onboarding view
-        showWindowForView(OnboardingView())
+        showAppWindow(.onboarding, OnboardingView())
     }
     
     // Disable the global hotkey so that the menu hotkey can be the same
@@ -428,8 +432,9 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Task { @MainActor in
             defer { self.endCaptureHint() }
             do {
-                let hintWindowIDs = self.hints.compactMap { $0.window.map { CGWindowID($0.windowNumber) } }
-                let image = try await HintWindowController.captureImage(of: selection, exceptingWindowIDs: hintWindowIDs)
+                // Leave out only the capture overlays; hints and our other windows are fair game.
+                let overlayWindowIDs = self.swcs.compactMap { $0.window.map { CGWindowID($0.windowNumber) } }
+                let image = try await HintWindowController.captureImage(of: selection, excludingWindowIDs: overlayWindowIDs)
                 let hint = HintWindowController(selection, screenshot: image)
                 hint.showWindow(nil)
                 hint.window?.becomeFirstResponder()
@@ -540,7 +545,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Hide the window's title and title bar
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.level = .floating
+        // Settings, About, and the tour are ordinary windows (the default `.normal` level), so
+        // hints, which float, always stay on top of them.
         
         // Hide everything but the close button
         window.standardWindowButton(.zoomButton)?.isHidden = true
@@ -557,11 +563,36 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc func showAbout(_ sender: AnyObject?) {
-        showWindowForView(AboutView())
+        showAppWindow(.about, AboutView())
     }
 
     @objc func showSettings(_ sender: AnyObject?) {
-        showWindowForView(SettingsView())
+        showAppWindow(.settings, SettingsView())
+    }
+
+    /**
+     Show one of the app's windows. If it's already open, bring that window forward instead of
+     creating another: these are ordinary windows that can end up behind other apps, and as a
+     menu-bar app we have no Dock icon to bring them back with.
+     */
+    private func showAppWindow<V: View>(_ kind: AppWindow, _ view: @autoclosure () -> V) {
+        if let window = self.appWindows[kind] {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let window = self.showWindowForView(view())
+        // We hold the window while it's open, so AppKit mustn't also release it on close.
+        window.isReleasedWhenClosed = false
+        self.appWindows[kind] = window
+
+        var observer: NSObjectProtocol?
+        observer = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification,
+                                                          object: window, queue: .main) { [weak self] _ in
+            self?.appWindows[kind] = nil
+            if let observer { NotificationCenter.default.removeObserver(observer) }
+        }
     }
     
     /**
