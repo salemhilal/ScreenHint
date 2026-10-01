@@ -360,7 +360,7 @@ struct OnboardingThanksView: View {
             Text("""
                 We hope you love using ScreenHint as much as we do.
                 
-                If you have questions, thoughts, or suggestions, you can find us at [screenhint@salem.io](mailto:screenhint@salem.io) or on twitter at [@screenhint](https://twitter.com/screenhint)
+                If you have questions, thoughts, or suggestions, you can find us at [screenhint@salem.io](mailto:screenhint@salem.io).
                 """)
                 .font(.system(.title3))
                 .frame(width: onboardingContentWidth)
