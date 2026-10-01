@@ -325,19 +325,54 @@ struct KeyCap: View {
     }
 }
 
+/// The shortcut recorder at a larger size, as the centerpiece of the tour's shortcut page. It's the
+/// same control as in Settings, and both edit the one stored shortcut.
+struct LargeShortcutRecorder: NSViewRepresentable {
+    func makeNSView(context: Context) -> KeyboardShortcuts.RecorderCocoa {
+        let recorder = KeyboardShortcuts.RecorderCocoa(for: .createNewHint)
+        recorder.controlSize = .large
+        recorder.font = .systemFont(ofSize: NSFont.systemFontSize(for: .large))
+        // The recorder reports a fixed 130pt width; let SwiftUI stretch it to the frame it's given.
+        recorder.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        return recorder
+    }
+
+    func updateNSView(_ recorder: KeyboardShortcuts.RecorderCocoa, context: Context) {}
+}
+
 struct OnboardingSettingsView: View {
     @ObservedObject var page: Page
+
+    private var isCurrentPage: Bool {
+        page.index == OnboardingPage.allCases.firstIndex(of: .settings)
+    }
     
     var body: some View {
         VStack {
             VStack(alignment: .leading) {
-                
-                Image("Onboarding.Settings")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .cornerRadius(5)
-                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth:1))
-                    .padding(.vertical)
+
+                // The recorder is this page's centerpiece, in the spot the other pages give their
+                // illustration.
+                VStack(spacing: 12) {
+                    Text("Set it here:")
+                        .font(.system(.title3))
+                    // Only in the view tree while this page is showing. The pager keeps other
+                    // pages in the window, and a recorder on a page you can't see could still take
+                    // keyboard focus (Tab) and silently record or clear the shortcut.
+                    Group {
+                        if isCurrentPage {
+                            LargeShortcutRecorder()
+                        } else {
+                            Color.clear
+                        }
+                    }
+                    .frame(width: 240, height: 30)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+                .background(RoundedRectangle(cornerRadius: 5).fill(Color.primary.opacity(0.04)))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.gray, lineWidth: 1))
+                .padding(.vertical)
 
                 Text("Set a global keyboard shortcut.")
                     .font(.system(.title, design: .rounded))
@@ -365,14 +400,6 @@ struct OnboardingSettingsView: View {
                     Text("works really well.")
                 }
                 .font(.system(.title3))
-                .padding(.bottom)
-
-                // The same recorder as in Settings; both edit the one stored shortcut.
-                HStack {
-                    Text("Set it here:")
-                        .font(.system(.title3))
-                    KeyboardShortcuts.Recorder(for: .createNewHint)
-                }
             }
             .frame(width: onboardingContentWidth)
             
@@ -457,28 +484,33 @@ struct OnboardingView: View {
             Pager(page: self.page,
                   data: OnboardingPage.allCases,
                   id: \.self) {p in
-                switch (p) {
-                case .welcome:
-                    OnboardingWelcomeView(page: page)
-                case .makeHint:
-                    OnboardingMakeHintView(page: page)
-                case .useHint:
-                    OnboardingUseHintView(page: page)
-                case .settings:
-                    OnboardingSettingsView(page: page)
-                case .thanks:
-                    OnboardingThanksView(page: page)
+                Group {
+                    switch (p) {
+                    case .welcome:
+                        OnboardingWelcomeView(page: page)
+                    case .makeHint:
+                        OnboardingMakeHintView(page: page)
+                    case .useHint:
+                        OnboardingUseHintView(page: page)
+                    case .settings:
+                        OnboardingSettingsView(page: page)
+                    case .thanks:
+                        OnboardingThanksView(page: page)
+                    }
                 }
+                // ...but the controls on each page keep their focus rings.
+                .focusEffectDisabled(false)
             }
             .background(.clear)
-            // SwiftUIPager makes the page stack focusable on macOS so the arrow keys can flip pages;
-            // keep that, but don't draw a focus ring around the whole tour.
+            // SwiftUIPager makes the page stack focusable on macOS so the arrow keys can flip pages
+            // (that's inside the library, so it can't be turned off from here). Don't draw a focus
+            // ring around the whole tour for it...
             .focusEffectDisabled()
             
             
             
             
-        }.padding(.vertical).frame(width: 600, height: 720)
+        }.padding(.vertical).frame(width: 600, height: 640)
         
     }
     
