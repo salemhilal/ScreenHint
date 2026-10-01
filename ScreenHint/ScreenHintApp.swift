@@ -428,8 +428,9 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Task { @MainActor in
             defer { self.endCaptureHint() }
             do {
-                let hintWindowIDs = self.hints.compactMap { $0.window.map { CGWindowID($0.windowNumber) } }
-                let image = try await HintWindowController.captureImage(of: selection, exceptingWindowIDs: hintWindowIDs)
+                // Leave out only the capture overlays; hints and our other windows are fair game.
+                let overlayWindowIDs = self.swcs.compactMap { $0.window.map { CGWindowID($0.windowNumber) } }
+                let image = try await HintWindowController.captureImage(of: selection, excludingWindowIDs: overlayWindowIDs)
                 let hint = HintWindowController(selection, screenshot: image)
                 hint.showWindow(nil)
                 hint.window?.becomeFirstResponder()
