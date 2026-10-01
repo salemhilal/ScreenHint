@@ -299,6 +299,32 @@ struct OnboardingUseHintView: View {
     }
 }
 
+/// A single keyboard key, drawn as a small key cap.
+struct KeyCap: View {
+    let symbol: String
+
+    init(_ symbol: String) {
+        self.symbol = symbol
+    }
+
+    var body: some View {
+        Text(symbol)
+            .font(.system(size: 13, weight: .medium, design: .rounded))
+            .frame(minWidth: 14)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+                    .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+            )
+    }
+}
+
 struct OnboardingSettingsView: View {
     @ObservedObject var page: Page
     
@@ -322,15 +348,28 @@ struct OnboardingSettingsView: View {
                     ScreenHint works best when it's close at hand.
                     
                     Set a global keyboard shortcut right here, or later from **"Settings..."** in ScreenHint's menu bar icon.
-                    
-                    If you need a suggestion, we love using `⇧⌘2`.
                     """)
                     .font(.system(.title3))
                     .padding(.bottom)
 
+                // The suggested shortcut, drawn as key caps in the order macOS shows modifiers.
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("If you need a suggestion,")
+                    HStack(spacing: 3) {
+                        KeyCap("⇧")
+                        KeyCap("⌘")
+                        KeyCap("2")
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Shift Command 2")
+                    Text("works really well.")
+                }
+                .font(.system(.title3))
+                .padding(.bottom)
+
                 // The same recorder as in Settings; both edit the one stored shortcut.
                 HStack {
-                    Text("Global shortcut:")
+                    Text("Set it here:")
                         .font(.system(.title3))
                     KeyboardShortcuts.Recorder(for: .createNewHint)
                 }
