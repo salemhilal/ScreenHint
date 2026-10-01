@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftUIPager
 import AVFoundation
+import KeyboardShortcuts
 
 enum OnboardingPage: CaseIterable {
     case welcome, makeHint, useHint, settings, thanks
@@ -82,9 +83,17 @@ struct OnboardingMakeHintView: View {
                     You can **move** hints by dragging them around.
                     
                     You can **resize** hints by dragging their edges.
-                    
                     """)
                     .font(.system(.title3))
+                    .padding(.bottom)
+
+                // Starts the same flow as "New Hint" in the menu and the global shortcut.
+                Button(action: {
+                    (NSApp.delegate as? ScreenHintAppDelegate)?.captureHint(nil)
+                }) {
+                    Label("Click here to try it", systemImage: "rectangle.dashed")
+                }
+                .controlSize(.large)
             }
             .frame(width: onboardingContentWidth)
             
@@ -312,13 +321,19 @@ struct OnboardingSettingsView: View {
                 Text("""
                     ScreenHint works best when it's close at hand.
                     
-                    To set a global keyboard shortcut, select **"Settings..."** from ScreenHint's menu bar icon.
+                    Set a global keyboard shortcut right here, or later from **"Settings..."** in ScreenHint's menu bar icon.
                     
-                    If you need a suggestion, we love using
-                    `\(Image(systemName:"command")) + \(Image(systemName:"shift")) + 2`.
+                    If you need a suggestion, we love using `⇧⌘2`.
                     """)
                     .font(.system(.title3))
-                
+                    .padding(.bottom)
+
+                // The same recorder as in Settings; both edit the one stored shortcut.
+                HStack {
+                    Text("Global shortcut:")
+                        .font(.system(.title3))
+                    KeyboardShortcuts.Recorder(for: .createNewHint)
+                }
             }
             .frame(width: onboardingContentWidth)
             
@@ -384,6 +399,7 @@ struct OnboardingThanksView: View {
                         .frame(minWidth: 100)
                 }
                 .controlSize(.large)
+                .keyboardShortcut(.defaultAction)
             }
             .padding()
         }
