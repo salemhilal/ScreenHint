@@ -541,7 +541,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Hide the window's title and title bar
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.level = .floating
+        // Settings, About, and the tour are ordinary windows (the default `.normal` level), so
+        // hints, which float, always stay on top of them.
         
         // Hide everything but the close button
         window.standardWindowButton(.zoomButton)?.isHidden = true
