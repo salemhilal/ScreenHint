@@ -26,6 +26,10 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // Held so the menu can pause the (legacy) HotKey binding while it's open.
     var hotKey: HotKey?
 
+    // Settings, About, and the tour each get a single window, held here while it's open.
+    private enum AppWindow { case onboarding, about, settings }
+    private var appWindows: [AppWindow: NSWindow] = [:]
+
     // Carbon hotkey used to cancel an in-progress capture with the Escape key. We use a
     // Carbon hotkey (rather than an NSEvent monitor or a key window) because it's
     // consumed system-wide without our overlay taking key focus — taking key focus would
@@ -126,7 +130,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.activate(ignoringOtherApps: true)
         
         // Show the onboarding view
-        showWindowForView(OnboardingView())
+        showAppWindow(.onboarding, OnboardingView())
     }
     
     // Disable the global hotkey so that the menu hotkey can be the same
@@ -559,11 +563,36 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc func showAbout(_ sender: AnyObject?) {
-        showWindowForView(AboutView())
+        showAppWindow(.about, AboutView())
     }
 
     @objc func showSettings(_ sender: AnyObject?) {
-        showWindowForView(SettingsView())
+        showAppWindow(.settings, SettingsView())
+    }
+
+    /**
+     Show one of the app's windows. If it's already open, bring that window forward instead of
+     creating another: these are ordinary windows that can end up behind other apps, and as a
+     menu-bar app we have no Dock icon to bring them back with.
+     */
+    private func showAppWindow<V: View>(_ kind: AppWindow, _ view: @autoclosure () -> V) {
+        if let window = self.appWindows[kind] {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let window = self.showWindowForView(view())
+        // We hold the window while it's open, so AppKit mustn't also release it on close.
+        window.isReleasedWhenClosed = false
+        self.appWindows[kind] = window
+
+        var observer: NSObjectProtocol?
+        observer = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification,
+                                                          object: window, queue: .main) { [weak self] _ in
+            self?.appWindows[kind] = nil
+            if let observer { NotificationCenter.default.removeObserver(observer) }
+        }
     }
     
     /**
