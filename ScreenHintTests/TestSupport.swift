@@ -176,9 +176,9 @@ enum TestImages {
 
     init(rect: NSRect, content: NSView) {
         window = NSWindow(contentRect: rect, styleMask: [.borderless], backing: .buffered, defer: false)
-        // Above floating windows (hints, and ScreenHint's Settings/About/tour windows, which the
-        // capture now includes) so nothing that happens to be open covers the fixture, but still
-        // below the capture overlay, which sits at the shielding level.
+        // Above floating windows, such as hints (which the capture includes, like the rest of
+        // ScreenHint's windows), so nothing that happens to be open covers the fixture, but
+        // still below the capture overlay, which sits at the shielding level.
         window.level = .screenSaver
         window.isOpaque = true
         window.backgroundColor = .black
