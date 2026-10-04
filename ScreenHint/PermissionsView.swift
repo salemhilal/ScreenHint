@@ -16,12 +16,8 @@ enum Permission: CaseIterable, Identifiable {
 
     var id: Self { self }
 
-    var title: String {
-        switch self {
-        case .screenRecording: "Screen Recording"
-        case .accessibility: "Accessibility"
-        }
-    }
+    /// The row's title: the pane's name in System Settings, so the two match.
+    var title: String { paneName }
 
     var explanation: String {
         switch self {
@@ -155,20 +151,30 @@ extension PermissionsModel.System {
         },
         request: { permission in
             NSApp.activate(ignoringOtherApps: true)
-            switch permission {
-            case .screenRecording:
-                CGRequestScreenCaptureAccess()
-            case .accessibility:
-                // Also what puts ScreenHint in the Accessibility list, so it's there to turn on
-                // even when no prompt appears.
-                let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
-                _ = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
-            }
+            requestFromSystem(permission)
         },
         openSettings: { permission in
+            // Ask again first: it's what adds ScreenHint to the pane's list, so there's a switch
+            // to turn on, and it does nothing if the system has already recorded the request.
+            requestFromSystem(permission)
             NSWorkspace.shared.open(permission.settingsURL)
         }
     )
+}
+
+/// Ask the system for a permission. Each call shows a prompt only if the system hasn't asked
+/// before, and none may appear at all (the Accessibility prompt doesn't in the App Store build).
+private func requestFromSystem(_ permission: Permission) {
+    switch permission {
+    case .screenRecording:
+        CGRequestScreenCaptureAccess()
+    case .accessibility:
+        // Two ways of asking for the same Accessibility grant; the event-posting one is the
+        // dedicated API and the more reliable of the two at getting ScreenHint listed.
+        CGRequestPostEventAccess()
+        let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        _ = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
+    }
 }
 
 /// One row per permission: what it's for, and either "Allowed" or a button to get it.
@@ -211,25 +217,29 @@ struct PermissionRow: View {
                 Text(permission.explanation)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                if state == .requestedButMissing {
-                    Text("Turn on ScreenHint in Privacy & Security → \(permission.paneName).")
+                if state != .granted {
+                    Text("In System Settings, it's under Privacy & Security → \(permission.paneName).")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
-            Spacer(minLength: 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            switch state {
-            case .granted:
-                Label("Allowed", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-            case .notRequested:
-                Button("Request Access", action: action)
-            case .requestedButMissing:
-                Button("Open System Settings…", action: action)
+            // Fixed width, so the text beside it doesn't reflow when the label changes.
+            Group {
+                switch state {
+                case .granted:
+                    Label("Allowed", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                case .notRequested:
+                    Button("Request Access", action: action)
+                case .requestedButMissing:
+                    Button("Open System Settings…", action: action)
+                }
             }
+            .frame(width: 190, alignment: .trailing)
         }
         .accessibilityElement(children: .contain)
     }
@@ -260,8 +270,9 @@ struct PermissionsView: View {
                 .keyboardShortcut(model.allGranted ? .defaultAction : .cancelAction)
             }
         }
-        .padding(24)
-        .padding(.top, 8)
-        .frame(width: 520)
+        .padding(.horizontal, 28)
+        .padding(.top, 36)
+        .padding(.bottom, 24)
+        .frame(width: 600)
     }
 }
