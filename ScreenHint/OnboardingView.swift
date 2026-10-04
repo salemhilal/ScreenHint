@@ -11,7 +11,7 @@ import AVFoundation
 import KeyboardShortcuts
 
 enum OnboardingPage: CaseIterable {
-    case welcome, makeHint, useHint, settings, thanks
+    case welcome, permissions, makeHint, useHint, settings, thanks
 }
 
 /// Width of each tour page's text and illustration column.
@@ -55,6 +55,60 @@ struct OnboardingWelcomeView: View {
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
                 
+            }
+            .padding()
+        }
+    }
+}
+
+/// The same permission rows as the Permissions window and Settings, as a tour step.
+struct OnboardingPermissionsView: View {
+    @ObservedObject var page: Page
+    @StateObject private var permissions = PermissionsModel()
+
+    var body: some View {
+        VStack {
+            VStack(alignment: .leading) {
+                Text("First, two permissions.")
+                    .font(.system(.title, design: .rounded))
+                    .fontWeight(.semibold)
+                    .padding(.vertical)
+
+                Text("Hints are screenshots you select with your mouse, so ScreenHint needs to see your screen and follow your mouse while you select.")
+                    .font(.system(.title3))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom)
+
+                PermissionsList(model: permissions)
+                    .font(.system(.body))
+                    .padding(.vertical)
+
+                if permissions.allGranted {
+                    Label("You're all set.", systemImage: "checkmark.circle.fill")
+                        .font(.system(.title3))
+                        .foregroundStyle(.green)
+                }
+            }
+            .frame(width: onboardingContentWidth)
+
+            Spacer()
+
+            HStack {
+                Button(action: { withAnimation {
+                    self.page.update(.previous)
+                }}) {
+                    Text("Back").frame(minWidth: 100)
+                }
+                .buttonStyle(.link)
+                .controlSize(.large)
+                Spacer()
+                Button(action: { withAnimation {
+                    self.page.update(.next)
+                }}) {
+                    Text("Next").frame(minWidth: 100)
+                }
+                .controlSize(.large)
+                .keyboardShortcut(.defaultAction)
             }
             .padding()
         }
@@ -487,6 +541,8 @@ struct OnboardingView: View {
                     switch (p) {
                     case .welcome:
                         OnboardingWelcomeView(page: page)
+                    case .permissions:
+                        OnboardingPermissionsView(page: page)
                     case .makeHint:
                         OnboardingMakeHintView(page: page)
                     case .useHint:

@@ -28,8 +28,9 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // Held so the menu can pause the (legacy) HotKey binding while it's open.
     var hotKey: HotKey?
 
-    // Settings, About, and the tour each get a single window, held here while it's open.
-    private enum AppWindow { case onboarding, about, settings }
+    // Settings, About, the tour, and Permissions each get a single window, held here while
+    // it's open.
+    private enum AppWindow { case onboarding, about, settings, permissions }
     private var appWindows: [AppWindow: NSWindow] = [:]
 
     // Carbon hotkey used to cancel an in-progress capture with the Escape key. We use a
@@ -243,28 +244,12 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.eventTapSource = nil
     }
 
-    private var permissionsWindow: NSWindow?
-
     /**
      Show the Permissions window, or bring it forward if it's already open. Shown at launch when a
      permission is missing, and whenever a capture is blocked by one.
      */
     @objc func showPermissions(_ sender: AnyObject?) {
-        if let window = self.permissionsWindow {
-            NSApp.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
-            return
-        }
-        let window = self.showWindowForView(PermissionsView())
-        // We hold the window while it's open, so AppKit mustn't also release it on close.
-        window.isReleasedWhenClosed = false
-        self.permissionsWindow = window
-        var observer: NSObjectProtocol?
-        observer = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification,
-                                                          object: window, queue: .main) { [weak self] _ in
-            self?.permissionsWindow = nil
-            if let observer { NotificationCenter.default.removeObserver(observer) }
-        }
+        showAppWindow(.permissions, PermissionsView())
     }
     
     /**
