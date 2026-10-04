@@ -16,6 +16,14 @@ struct SettingsView: View {
     
     var body: some View {
         VStack {
+            HStack {
+                Text("Settings")
+                    .font(.system(.title, design: .rounded))
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            .padding(.bottom)
+
             HStack{
                 Text("General")
                     .font(.system(.title2, design: .rounded ))
@@ -50,10 +58,11 @@ struct SettingsView: View {
             }
             PermissionsList(model: permissions)
         }
-        .padding(.horizontal)
-        .padding(.top, 28)
-        .padding(.bottom)
-        .frame(width: 460)
+        // The same content width as the tour, so the permission cards look the same in both.
+        .frame(width: 480)
+        .padding(.horizontal, 28)
+        .padding(.top, 36)
+        .padding(.bottom, 24)
         .onChange(of: openAtLogin, perform: { shouldOpenAtLogin in
             if (shouldOpenAtLogin) {
                 SMLoginItemSetEnabled(AppIds.launcher as CFString, true)

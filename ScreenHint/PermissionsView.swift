@@ -182,7 +182,7 @@ struct PermissionsList: View {
     @ObservedObject var model: PermissionsModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             ForEach(Permission.allCases) { permission in
                 PermissionRow(permission: permission, state: model.state(of: permission)) {
                     model.requestOrOpenSettings(permission)
@@ -199,48 +199,48 @@ struct PermissionsList: View {
     }
 }
 
+/// One permission as a card: what it's for, whether it's allowed, and (when it isn't) where to
+/// find it in System Settings plus a button to get it.
 struct PermissionRow: View {
     let permission: Permission
     let state: PermissionsModel.State
     let action: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: permission.systemImage)
-                .font(.system(size: 20))
-                .frame(width: 28)
-                .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: permission.systemImage)
+                    .foregroundStyle(.secondary)
                 Text(permission.title)
                     .font(.headline)
-                Text(permission.explanation)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                if state != .granted {
+                Spacer(minLength: 8)
+                if state == .granted {
+                    Label("Allowed", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                } else {
+                    Label("Not allowed", systemImage: "exclamationmark.circle.fill")
+                        .foregroundStyle(.orange)
+                }
+            }
+
+            Text(permission.explanation)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if state != .granted {
+                HStack(alignment: .bottom) {
                     Text("In System Settings, it's under Privacy & Security → \(permission.paneName).")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 12)
+                    Button(state == .notRequested ? "Request Access" : "Open System Settings…", action: action)
                 }
             }
-
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            // Fixed width, so the text beside it doesn't reflow when the label changes.
-            Group {
-                switch state {
-                case .granted:
-                    Label("Allowed", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                case .notRequested:
-                    Button("Request Access", action: action)
-                case .requestedButMissing:
-                    Button("Open System Settings…", action: action)
-                }
-            }
-            .frame(width: 190, alignment: .trailing)
         }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.04)))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.12), lineWidth: 1))
         .accessibilityElement(children: .contain)
     }
 }
