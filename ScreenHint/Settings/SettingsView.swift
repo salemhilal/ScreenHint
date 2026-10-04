@@ -12,6 +12,7 @@ import KeyboardShortcuts
 struct SettingsView: View {    
     @AppStorage("openAtLogin") private var openAtLogin = false
     @AppStorage("pinToScreen") private var pinToScreen = false
+    @StateObject private var permissions = PermissionsModel()
     
     var body: some View {
         VStack {
@@ -38,9 +39,21 @@ struct SettingsView: View {
             Form {
                 KeyboardShortcuts.Recorder(for: .createNewHint)
             }
+
+            Divider().padding(.vertical)
+
+            HStack{
+                Text("Permissions")
+                    .font(.system(.title2, design: .rounded ))
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            PermissionsList(model: permissions)
         }
         .padding(.horizontal)
-        .frame(width: 350, height: 250)
+        .padding(.top, 28)
+        .padding(.bottom)
+        .frame(width: 460)
         .onChange(of: openAtLogin, perform: { shouldOpenAtLogin in
             if (shouldOpenAtLogin) {
                 SMLoginItemSetEnabled(AppIds.launcher as CFString, true)

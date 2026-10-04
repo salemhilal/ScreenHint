@@ -15,6 +15,8 @@ import ApplicationServices
 import os
 
 
+private let log = Logger(subsystem: "io.salem.ScreenHint", category: "app")
+
 class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // Status bar item
@@ -62,7 +64,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         ])
         
         let isFirstLaunch = UserDefaults.standard.bool(forKey: AppStorageKeys.isFirstLaunch)
-        print("isFirstLaunch", isFirstLaunch)
+        log.info("isFirstLaunch: \(isFirstLaunch, privacy: .public)")
 
         // ScreenHintTests runs with this app as its TEST_HOST, so every test run launches
         // us for real. Don't pop onboarding over the tests.
@@ -79,14 +81,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             SMLoginItemSetEnabled(AppIds.launcher as CFString, true)
         }
         
-        // Ask for recording access if we don't have it
-        let hasScreenAccess = CGPreflightScreenCaptureAccess();
-        if (!hasScreenAccess) {
-            // The first time we request access, the settings window opens and an entry for ScreenHint is added to
-            // the permissions section of Security & Privacy > Privacy > ScreenRecording. Subsequent requests don't
-            // seem to open settings, so use #checkForPermissions() instead.
-            CGRequestScreenCaptureAccess()
-        }
                 
         // Generate secret windows, now and any time the screen configuration changes
 //        self.generateSecretWindows()
@@ -117,6 +111,11 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // (where the ~1s delay is invisible) means subsequent calls just re-enable the
         // existing tap.
         self.makeEventTap()
+
+        // If a permission is missing, walk through it now rather than at the first capture.
+        if !isRunningTests && !PermissionsModel().allGranted {
+            self.showPermissions(nil)
+        }
     }
     
     @objc func showOnboarding(_ sender: AnyObject?) {
@@ -216,23 +215,41 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
      If we don't have permissions, prompt the user to enable them in settings.
      */
     func checkForPermissions() -> Bool {
-        let hasScreenAccess = CGPreflightScreenCaptureAccess();
-        if (!hasScreenAccess) {
-            let alert = NSAlert()
-            alert.messageText = "ScreenHint needs your permission to take screenshots."
-            alert.informativeText = "Go to System Preferences > Security & Privacy > Privacy, and check \"ScreenHint\" under the Screen Recording section."
-            alert.alertStyle = .warning
-            alert.addButton(withTitle: "Open Settings")
-            alert.addButton(withTitle: "Cancel")
-            let shouldOpenSettings = alert.runModal() == .alertFirstButtonReturn;
-            
-            if (shouldOpenSettings) {
-                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
-            }
+        let hasScreenAccess = CGPreflightScreenCaptureAccess()
+        if !hasScreenAccess {
+            log.error("Screen Recording isn't allowed; showing the Permissions window")
+            self.showPermissions(nil)
         }
-        
-        
-        return hasScreenAccess;
+        return hasScreenAccess
+    }
+
+    /// Whether the capture event tap can be created, i.e. whether Accessibility is effectively on.
+    func canCreateEventTap() -> Bool {
+        self.makeEventTap()
+    }
+
+    private var permissionsWindow: NSWindow?
+
+    /**
+     Show the Permissions window, or bring it forward if it's already open. Shown at launch when a
+     permission is missing, and whenever a capture is blocked by one.
+     */
+    @objc func showPermissions(_ sender: AnyObject?) {
+        if let window = self.permissionsWindow {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            return
+        }
+        let window = self.showWindowForView(PermissionsView())
+        // We hold the window while it's open, so AppKit mustn't also release it on close.
+        window.isReleasedWhenClosed = false
+        self.permissionsWindow = window
+        var observer: NSObjectProtocol?
+        observer = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification,
+                                                          object: window, queue: .main) { [weak self] _ in
+            self?.permissionsWindow = nil
+            if let observer { NotificationCenter.default.removeObserver(observer) }
+        }
     }
     
     /**
@@ -258,10 +275,13 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Preserving hover requires a swallowing event tap, which needs Accessibility.
         // Don't gate on AXIsProcessTrusted() — it can read false even when the tap works
-        // (e.g. under Xcode). Instead, try to create the tap; if that fails, prompt for
-        // Accessibility and bail.
+        // (e.g. under Xcode). Instead, try to create the tap, and if that fails, show the
+        // Permissions window. Don't rely on the system's Accessibility prompt: macOS shows it
+        // at most once, and in the App Store build it doesn't appear at all, so without this
+        // choosing New Hint silently does nothing.
         guard self.startEventTap() else {
-            _ = self.hasAccessibilityPermission(prompt: true)
+            log.error("Couldn't start the event tap; Accessibility is probably off")
+            self.showPermissions(nil)
             return
         }
 
@@ -289,11 +309,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Whether the app is trusted for Accessibility. When `prompt` is true and it isn't,
     /// the system shows its own "grant Accessibility" dialog.
-    private func hasAccessibilityPermission(prompt: Bool) -> Bool {
-        let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
-        return AXIsProcessTrustedWithOptions([key: prompt] as CFDictionary)
-    }
-
     /// Create the event tap and add it to the run loop in a *disabled* state. No-op if
     /// the tap already exists. Returns false only if creation fails (Accessibility denied).
     @discardableResult
@@ -435,7 +450,7 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 // Drop any hints that have since been closed — they can't be reopened.
                 self.hints = self.hints.filter { $0.window?.isVisible ?? false }
             } catch {
-                print("Failed to capture screenshot: \(error)")
+                log.error("Failed to capture screenshot: \(error, privacy: .public)")
             }
         }
     }
