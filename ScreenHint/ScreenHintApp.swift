@@ -260,6 +260,9 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         let window = self.showWindowForView(PermissionsView())
+        // An ordinary window, not floating like the others: the system's permission prompts are
+        // ordinary windows too, and a floating Permissions window would sit on top of them.
+        window.level = .normal
         // We hold the window while it's open, so AppKit mustn't also release it on close.
         window.isReleasedWhenClosed = false
         self.permissionsWindow = window

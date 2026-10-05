@@ -10,6 +10,7 @@
 import SwiftUI
 import AppKit
 import ApplicationServices
+import ScreenCaptureKit
 
 enum Permission: CaseIterable, Identifiable {
     case screenRecording, accessibility
@@ -180,6 +181,11 @@ private func requestFromSystem(_ permission: Permission) {
     switch permission {
     case .screenRecording:
         CGRequestScreenCaptureAccess()
+        // CGRequestScreenCaptureAccess() only asks the system once per launch; later calls
+        // return without registering anything, so after a reset ScreenHint could be missing
+        // from the pane. Asking ScreenCaptureKit for shareable content checks with the system
+        // every time, which lists ScreenHint (switched off) if it isn't already.
+        SCShareableContent.getExcludingDesktopWindows(false, onScreenWindowsOnly: true) { _, _ in }
     case .accessibility:
         // Two ways of asking for the same Accessibility grant; the event-posting one is the
         // dedicated API and the more reliable of the two at getting ScreenHint listed.
