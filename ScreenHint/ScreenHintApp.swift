@@ -223,17 +223,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return hasScreenAccess
     }
 
-    /// Whether the capture event tap can be created, i.e. whether Accessibility is effectively on.
-    func canCreateEventTap() -> Bool {
-        if AXIsProcessTrusted() { return true }
-        // Don't pull the tap out from under a capture in progress.
-        if self.captureActive { return self.eventTap != nil }
-        // A tap made earlier (e.g. the one pre-warmed at launch) outlives a revoked grant but
-        // never receives events again, so only a freshly created tap is proof of access.
-        self.discardEventTap()
-        return self.makeEventTap()
-    }
-
     /// Throw away the current event tap so the next `makeEventTap()` creates a new one.
     private func discardEventTap() {
         if let tap = self.eventTap {

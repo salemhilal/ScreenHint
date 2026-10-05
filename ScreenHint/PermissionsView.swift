@@ -156,10 +156,11 @@ extension PermissionsModel.System {
             case .screenRecording:
                 return CGPreflightScreenCaptureAccess()
             case .accessibility:
-                // AXIsProcessTrusted() can read false even when the event tap works (e.g. under
-                // Xcode), so a tap that can be created counts as granted too.
-                if AXIsProcessTrusted() { return true }
-                return (NSApp.delegate as? ScreenHintAppDelegate)?.canCreateEventTap() ?? false
+                // Accessibility is what the switch in System Settings sets, and AXIsProcessTrusted()
+                // asks the system afresh each time, so flipping it shows up right away.
+                // (CGPreflightPostEventAccess() looks related but answers from a cache, and can say
+                // yes long after the switch is turned off.)
+                return AXIsProcessTrusted()
             }
         },
         request: { permission in
