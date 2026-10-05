@@ -8,17 +8,11 @@
 import Foundation
 import SwiftUI
 
-protocol CopyDelegate {
-    func shouldCopy();
-}
-
-
 /**
  This is a window that closes when you doubleclick it.
  */
 class HintWindow: NSWindow {
     
-    var copyDelegate: CopyDelegate?
     var screenshot: CGImage? = nil
 
     override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
@@ -59,13 +53,9 @@ class HintWindow: NSWindow {
     }
 
     /**
-     Handle keyboard shortcuts
+     Ignore plain typing. Shortcuts like ⌘C reach the menu through `performKeyEquivalent`.
      */
     override func keyDown(with event: NSEvent) {
-        // Cmd + C = copy
-        if (event.charactersIgnoringModifiers == "c" && event.modifierFlags.contains(.command)) {
-            self.copyDelegate?.shouldCopy()
-        }
     }
     
     /**
@@ -124,19 +114,23 @@ class HintWindow: NSWindow {
     func showBadge(_ text: String, duration: TimeInterval = 1.2) {
         guard let contentView = self.contentView else { return }
         self.badge?.removeFromSuperview()
+        self.badge = nil
+
+        // VoiceOver users can't see the badge, so say it too.
+        NSAccessibility.post(element: self,
+                             notification: .announcementRequested,
+                             userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.high.rawValue])
 
         let badge = HintBadgeView(text: text)
+        // On a hint too small to hold it, a clipped badge is just a dark smudge; skip it.
+        guard badge.frame.width <= contentView.bounds.width,
+              badge.frame.height <= contentView.bounds.height else { return }
         badge.setFrameOrigin(NSPoint(x: (contentView.bounds.width - badge.frame.width) / 2,
                                      y: (contentView.bounds.height - badge.frame.height) / 2))
         // Stay centered if the hint is resized while the badge is up.
         badge.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin, .maxYMargin]
         contentView.addSubview(badge)
         self.badge = badge
-
-        // VoiceOver users can't see the badge, so say it too.
-        NSAccessibility.post(element: self,
-                             notification: .announcementRequested,
-                             userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.high.rawValue])
 
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         let fade: TimeInterval = reduceMotion ? 0 : 0.15

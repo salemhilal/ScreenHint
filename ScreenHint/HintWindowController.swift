@@ -15,7 +15,7 @@ import os
 
 private let log = Logger(subsystem: "io.salem.ScreenHint", category: "hint")
 
-class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
+class HintWindowController:  NSWindowController, NSWindowDelegate, NSMenuDelegate {
     
     var hintWindow: HintWindow
     var screenshot: CGImage?
@@ -55,7 +55,6 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         self.shouldSetBorderlessMode(self.isBorderless);
         
         window.delegate = self
-        window.copyDelegate = self
         
         // Initialize the menu
         // TODO: put this in its own method
