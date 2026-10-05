@@ -201,9 +201,11 @@ struct PermissionsList: View {
                 }
             }
         }
-        // Grants happen in System Settings, outside the app, so keep checking while this is up.
+        // macOS doesn't announce permission changes, and they happen outside the app (in System
+        // Settings, or with tccutil), so keep checking while this is up, granted or not. It's
+        // cheap once everything's granted: two quick system calls.
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-            if !model.allGranted { model.refresh() }
+            model.refresh()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh()
