@@ -56,9 +56,10 @@ enum Permission: CaseIterable, Identifiable {
         }
     }
 
-    /// Whether the system request reliably shows a prompt. The Accessibility prompt doesn't
-    /// appear for ScreenHint (sandboxed), so for Accessibility the request is made and System
-    /// Settings opened in one step.
+    /// Whether the system request reliably shows a prompt worth waiting for. The Accessibility
+    /// prompt never appears for ScreenHint (sandboxed), so for Accessibility the request is made
+    /// and System Settings opened in one step. (The request may still show the system's
+    /// "(Events)" prompt, alongside System Settings.)
     var systemPromptAppears: Bool {
         self == .screenRecording
     }
@@ -80,6 +81,8 @@ enum Permission: CaseIterable, Identifiable {
  Accessibility prompt doesn't appear at all in the sandboxed App Store build), so the only way
  forward is System Settings, where ScreenHint is listed because it has asked. That's also why a
  request flips straight to "requested": we can't tell whether a prompt actually appeared.
+ (Asking for Accessibility can still show the system's "(Events)" prompt, which grants the
+ event access the capture needs; the card's switch is still the one to turn on.)
 
  The system calls are injected so the logic can be tested without real prompts.
  */
@@ -138,8 +141,9 @@ final class PermissionsModel: ObservableObject {
             defaults.set(true, forKey: permission.requestedKey)
             system.request(permission)
         case .notRequested:
-            // No prompt would appear, so go straight to System Settings (which requests first,
-            // putting ScreenHint in the pane's list).
+            // No Accessibility prompt would appear, so go straight to System Settings (which
+            // requests first, putting ScreenHint in the pane's list; that may also show the
+            // system's "(Events)" prompt).
             defaults.set(true, forKey: permission.requestedKey)
             system.openSettings(permission)
         case .requestedButMissing:
@@ -177,7 +181,8 @@ extension PermissionsModel.System {
 }
 
 /// Ask the system for a permission. Each call shows a prompt only if the system hasn't asked
-/// before, and none may appear at all (the Accessibility prompt doesn't in the App Store build).
+/// before. For Accessibility, the Accessibility prompt itself never appears for the sandboxed
+/// app, but the event-posting request can show the "(Events)" prompt.
 private func requestFromSystem(_ permission: Permission) {
     switch permission {
     case .screenRecording:
@@ -232,6 +237,7 @@ struct PermissionRow: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Image(systemName: permission.systemImage)
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
                 Text(permission.title)
                     .font(.headline)
                 Spacer(minLength: 8)
@@ -264,6 +270,7 @@ struct PermissionRow: View {
                     Spacer(minLength: 12)
                     Button(state == .notRequested && permission.systemPromptAppears
                            ? "Request Access" : "Open System Settings…", action: action)
+                    .accessibilityHint("For \(permission.title)")
                 }
             }
         }

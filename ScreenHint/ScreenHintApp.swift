@@ -113,7 +113,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.makeEventTap()
 
         // If a permission is missing, walk through it now rather than at the first capture.
-        if !isRunningTests && !PermissionsModel().allGranted {
+        // On first launch the tour covers this, so don't stack another window on top of it.
+        if !isRunningTests && !isFirstLaunch && !PermissionsModel().allGranted {
             self.showPermissions(nil)
         }
     }
@@ -211,8 +212,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     
     /**
-     Returns true if we have permissions to capture screen information, false otherwise.
-     If we don't have permissions, prompt the user to enable them in settings.
+     Returns true if we have permission to record the screen, false otherwise.
+     If we don't, show the Permissions window.
      */
     func checkForPermissions() -> Bool {
         let hasScreenAccess = CGPreflightScreenCaptureAccess()
@@ -249,9 +250,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         let window = self.showWindowForView(PermissionsView())
-        // An ordinary window, not floating like the others: the system's permission prompts are
-        // ordinary windows too, and a floating Permissions window would sit on top of them.
-        window.level = .normal
         // We hold the window while it's open, so AppKit mustn't also release it on close.
         window.isReleasedWhenClosed = false
         self.permissionsWindow = window
@@ -318,8 +316,6 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    /// Whether the app is trusted for Accessibility. When `prompt` is true and it isn't,
-    /// the system shows its own "grant Accessibility" dialog.
     /// Create the event tap and add it to the run loop in a *disabled* state. No-op if
     /// the tap already exists. Returns false only if creation fails (Accessibility denied).
     @discardableResult
@@ -571,7 +567,8 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Hide the window's title and title bar
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.level = .floating
+        // Settings, About, and the tour are ordinary windows (the default `.normal` level), so
+        // hints, which float, always stay on top of them.
         
         // Hide everything but the close button
         window.standardWindowButton(.zoomButton)?.isHidden = true

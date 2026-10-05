@@ -11,7 +11,7 @@ import Testing
 @testable import ScreenHint
 
 @Suite("Permissions")
-struct PermissionsTests {
+final class PermissionsTests {
 
     /// Stand-ins for the system calls, recording what the model asked for.
     final class FakeSystem {
@@ -27,9 +27,20 @@ struct PermissionsTests {
         }
     }
 
+    /// The throwaway defaults domains made by `freshDefaults()`, removed when the test ends
+    /// (Swift Testing makes a new instance per test) so they don't pile up on disk.
+    private var suiteNames: [String] = []
+
+    deinit {
+        for name in suiteNames {
+            UserDefaults.standard.removePersistentDomain(forName: name)
+        }
+    }
+
     /// A throwaway defaults domain, so tests never see (or touch) the app's real settings.
     private func freshDefaults() -> UserDefaults {
         let name = "PermissionsTests-\(UUID().uuidString)"
+        suiteNames.append(name)
         let defaults = UserDefaults(suiteName: name)!
         defaults.removePersistentDomain(forName: name)
         return defaults
@@ -49,7 +60,7 @@ struct PermissionsTests {
         #expect(model.state(of: .screenRecording) == .requestedButMissing)
     }
 
-    @Test("Accessibility, which never prompts, goes straight to System Settings on the first press")
+    @Test("Accessibility, whose prompt never appears, goes straight to System Settings on the first press")
     func accessibilityFirstPressOpensSettings() {
         let fake = FakeSystem()
         let model = PermissionsModel(system: fake.system, defaults: freshDefaults())
