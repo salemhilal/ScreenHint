@@ -55,6 +55,13 @@ enum Permission: CaseIterable, Identifiable {
         }
     }
 
+    /// Whether the system request reliably shows a prompt. The Accessibility prompt doesn't
+    /// appear for ScreenHint (sandboxed), so for Accessibility the request is made and System
+    /// Settings opened in one step.
+    var systemPromptAppears: Bool {
+        self == .screenRecording
+    }
+
     /// UserDefaults key recording that we've asked for this permission at least once.
     var requestedKey: String {
         switch self {
@@ -126,9 +133,14 @@ final class PermissionsModel: ObservableObject {
         switch state(of: permission) {
         case .granted:
             return
-        case .notRequested:
+        case .notRequested where permission.systemPromptAppears:
             defaults.set(true, forKey: permission.requestedKey)
             system.request(permission)
+        case .notRequested:
+            // No prompt would appear, so go straight to System Settings (which requests first,
+            // putting ScreenHint in the pane's list).
+            defaults.set(true, forKey: permission.requestedKey)
+            system.openSettings(permission)
         case .requestedButMissing:
             system.openSettings(permission)
         }
@@ -191,7 +203,7 @@ struct PermissionsList: View {
         }
         // Grants happen in System Settings, outside the app, so keep checking while this is up.
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-            model.refresh()
+            if !model.allGranted { model.refresh() }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh()
@@ -214,12 +226,19 @@ struct PermissionRow: View {
                 Text(permission.title)
                     .font(.headline)
                 Spacer(minLength: 8)
+                // Only the symbol is tinted; colored text on the light card is too low-contrast.
                 if state == .granted {
-                    Label("Allowed", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                    Label {
+                        Text("Allowed")
+                    } icon: {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    }
                 } else {
-                    Label("Not allowed", systemImage: "exclamationmark.circle.fill")
-                        .foregroundStyle(.orange)
+                    Label {
+                        Text("Not allowed").foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+                    }
                 }
             }
 
@@ -234,7 +253,8 @@ struct PermissionRow: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 12)
-                    Button(state == .notRequested ? "Request Access" : "Open System Settings…", action: action)
+                    Button(state == .notRequested && permission.systemPromptAppears
+                           ? "Request Access" : "Open System Settings…", action: action)
                 }
             }
         }

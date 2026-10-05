@@ -35,17 +35,29 @@ struct PermissionsTests {
         return defaults
     }
 
-    @Test("a permission that's never been asked for gets the system request first")
+    @Test("Screen Recording, which does prompt, gets the system request first")
     func firstPressRequests() {
         let fake = FakeSystem()
         let model = PermissionsModel(system: fake.system, defaults: freshDefaults())
-        #expect(model.state(of: .accessibility) == .notRequested)
+        #expect(model.state(of: .screenRecording) == .notRequested)
+
+        model.requestOrOpenSettings(.screenRecording)
+
+        #expect(fake.requests == [.screenRecording])
+        #expect(fake.settingsOpened.isEmpty)
+        // We can't tell whether a prompt appeared, so the next press goes to System Settings.
+        #expect(model.state(of: .screenRecording) == .requestedButMissing)
+    }
+
+    @Test("Accessibility, which never prompts, goes straight to System Settings on the first press")
+    func accessibilityFirstPressOpensSettings() {
+        let fake = FakeSystem()
+        let model = PermissionsModel(system: fake.system, defaults: freshDefaults())
 
         model.requestOrOpenSettings(.accessibility)
 
-        #expect(fake.requests == [.accessibility])
-        #expect(fake.settingsOpened.isEmpty)
-        // We can't tell whether a prompt appeared, so the next press goes to System Settings.
+        #expect(fake.requests.isEmpty)
+        #expect(fake.settingsOpened == [.accessibility])
         #expect(model.state(of: .accessibility) == .requestedButMissing)
     }
 

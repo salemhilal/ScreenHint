@@ -225,7 +225,26 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Whether the capture event tap can be created, i.e. whether Accessibility is effectively on.
     func canCreateEventTap() -> Bool {
-        self.makeEventTap()
+        if AXIsProcessTrusted() { return true }
+        // Don't pull the tap out from under a capture in progress.
+        if self.captureActive { return self.eventTap != nil }
+        // A tap made earlier (e.g. the one pre-warmed at launch) outlives a revoked grant but
+        // never receives events again, so only a freshly created tap is proof of access.
+        self.discardEventTap()
+        return self.makeEventTap()
+    }
+
+    /// Throw away the current event tap so the next `makeEventTap()` creates a new one.
+    private func discardEventTap() {
+        if let tap = self.eventTap {
+            CGEvent.tapEnable(tap: tap, enable: false)
+            CFMachPortInvalidate(tap)
+        }
+        if let source = self.eventTapSource {
+            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
+        }
+        self.eventTap = nil
+        self.eventTapSource = nil
     }
 
     private var permissionsWindow: NSWindow?
@@ -347,6 +366,13 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Enable the event tap for a capture session. Returns false if the tap couldn't be
     /// created (Accessibility not granted).
     private func startEventTap() -> Bool {
+        // If Accessibility reads as off, the cached tap may predate a revoked grant: it would
+        // enable fine but never deliver events, leaving the overlay up and unresponsive. Make
+        // a fresh one, which fails cleanly when access really is off. (AXIsProcessTrusted()
+        // can also read false when the tap works, e.g. under Xcode; recreating is harmless then.)
+        if !AXIsProcessTrusted() {
+            self.discardEventTap()
+        }
         guard makeEventTap(), let tap = self.eventTap else { return false }
         self.captureActive = true
         CGEvent.tapEnable(tap: tap, enable: true)
