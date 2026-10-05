@@ -10,6 +10,7 @@
 //
 
 import AppKit
+import Vision
 import Testing
 @testable import ScreenHint
 
@@ -51,6 +52,30 @@ struct CopyFeedbackTests {
         #expect(lines.first?.contains("remember the milk") == true)
     }
 
+    @Test("recognition falls back to .fast when .accurate finds nothing")
+    func fallsBackToFast() {
+        let image = TestImages.solid(width: 10, height: 10, color: TestColor.white)
+        var levels: [VNRequestTextRecognitionLevel] = []
+        let lines = HintWindowController.recognizeText(in: image) { _, level in
+            levels.append(level)
+            return level == .fast ? ["from fast"] : []
+        }
+        #expect(levels == [.accurate, .fast])
+        #expect(lines == ["from fast"])
+    }
+
+    @Test("recognition stops at .accurate when it finds text")
+    func accurateWinsWhenItWorks() {
+        let image = TestImages.solid(width: 10, height: 10, color: TestColor.white)
+        var levels: [VNRequestTextRecognitionLevel] = []
+        let lines = HintWindowController.recognizeText(in: image) { _, level in
+            levels.append(level)
+            return ["from \(level == .accurate ? "accurate" : "fast")"]
+        }
+        #expect(levels == [.accurate])
+        #expect(lines == ["from accurate"])
+    }
+
     @Test("recognizing a blank image finds no text")
     func blankImageHasNoText() {
         let image = TestImages.solid(width: 400, height: 300, color: TestColor.white)
@@ -63,11 +88,14 @@ struct CopyFeedbackTests {
                                               screenshot: TestImages.solid(width: 400, height: 200, color: TestColor.white))
         defer { controller.window?.close() }
 
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString("something the user copied earlier", forType: .string)
+        let pasteboard = NSPasteboard.withUniqueName()
+        defer { pasteboard.releaseGlobally() }
+        controller.pasteboard = pasteboard
+        pasteboard.clearContents()
+        pasteboard.setString("something the user copied earlier", forType: .string)
 
         #expect(controller.copyText([]) == false)
-        #expect(NSPasteboard.general.string(forType: .string) == "something the user copied earlier")
+        #expect(pasteboard.string(forType: .string) == "something the user copied earlier")
         #expect(controller.hintWindow.badge?.label.stringValue == "No text found")
     }
 
@@ -77,8 +105,12 @@ struct CopyFeedbackTests {
                                               screenshot: TestImages.solid(width: 400, height: 200, color: TestColor.white))
         defer { controller.window?.close() }
 
+        let pasteboard = NSPasteboard.withUniqueName()
+        defer { pasteboard.releaseGlobally() }
+        controller.pasteboard = pasteboard
+
         #expect(controller.copyText(["first line", "second line"]) == true)
-        #expect(NSPasteboard.general.string(forType: .string) == "first line\nsecond line")
+        #expect(pasteboard.string(forType: .string) == "first line\nsecond line")
         #expect(controller.hintWindow.badge?.label.stringValue == "Text copied")
     }
 
@@ -87,6 +119,9 @@ struct CopyFeedbackTests {
         let controller = HintWindowController(NSRect(x: 0, y: 0, width: 200, height: 100),
                                               screenshot: TestImages.solid(width: 400, height: 200, color: TestColor.red))
         defer { controller.window?.close() }
+        let pasteboard = NSPasteboard.withUniqueName()
+        defer { pasteboard.releaseGlobally() }
+        controller.pasteboard = pasteboard
 
         controller.shouldCopy()
 
@@ -118,6 +153,9 @@ struct CopyFeedbackTests {
         let controller = HintWindowController(NSRect(x: 0, y: 0, width: 200, height: 100),
                                               screenshot: TestImages.solid(width: 400, height: 200, color: TestColor.red))
         defer { controller.window?.close() }
+        let pasteboard = NSPasteboard.withUniqueName()
+        defer { pasteboard.releaseGlobally() }
+        controller.pasteboard = pasteboard
         let window = controller.hintWindow
 
         // Hide Borders is listed as ⇧⌘B.

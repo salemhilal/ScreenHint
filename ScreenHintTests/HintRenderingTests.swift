@@ -79,10 +79,14 @@ struct HintRenderingTests {
         let screenshot = TestImages.solid(width: 300, height: 150, color: TestColor.yellow) // 3x
         let controller = HintWindowController(rect, screenshot: screenshot)
         defer { controller.window?.close() }
+        // A private pasteboard, so the test doesn't clobber the real clipboard.
+        let pasteboard = NSPasteboard.withUniqueName()
+        defer { pasteboard.releaseGlobally() }
+        controller.pasteboard = pasteboard
 
         controller.shouldCopy()
 
-        let pasted = NSImage(pasteboard: .general)
+        let pasted = NSImage(pasteboard: pasteboard)
         let rep = pasted?.representations.first
         #expect(rep?.pixelsWide == 300)
         #expect(rep?.pixelsHigh == 150)

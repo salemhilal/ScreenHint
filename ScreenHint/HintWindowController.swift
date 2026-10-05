@@ -11,6 +11,9 @@ import SwiftUI
 import Vision
 import UniformTypeIdentifiers
 import ScreenCaptureKit
+import os
+
+private let log = Logger(subsystem: "io.salem.ScreenHint", category: "hint")
 
 class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate, NSMenuDelegate {
     
@@ -22,6 +25,13 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     var allDesktopsMenuItem: NSMenuItem?
     var borderlessModeMenuItem: NSMenuItem?
     
+    /// Where Copy and Copy Text write. Tests swap in a private pasteboard so they don't clobber
+    /// the real clipboard.
+    var pasteboard: NSPasteboard = .general
+
+    /// True while Copy Text is reading the hint, so repeated presses don't start another pass.
+    private var isRecognizingText = false
+
     // Hint state
     @AppStorage("pinToScreen") private var defaultPinToDesktop = false
     var pinToDesktop = false
@@ -207,9 +217,9 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
         }
         
         let image = NSImage.init(cgImage: screenshot, size: self.window!.frame.size)
-        NSPasteboard.general.clearContents()
-        let didCopy = NSPasteboard.general.writeObjects([image])
-        self.hintWindow.showBadge(didCopy ? "Copied" : "Couldn't copy")
+        self.pasteboard.clearContents()
+        let didCopy = self.pasteboard.writeObjects([image])
+        self.hintWindow.showBadge(didCopy ? "Copied" : "Couldn't copy. Try again.")
     }
     
     /**
@@ -224,13 +234,17 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
     
     /**
      Extracts text from the current screenshot and copies it to the clipboard. Recognition runs
-     off the main thread, since it can take a moment on a large hint.
+     off the main thread, since it can take a moment on a large hint; a "Reading text…" badge
+     stays up until the result replaces it, and presses in the meantime are ignored.
      */
     func shouldCopyText() {
-        guard let screenshot = self.screenshot else { return }
+        guard let screenshot = self.screenshot, !self.isRecognizingText else { return }
+        self.isRecognizingText = true
+        self.hintWindow.showBadge("Reading text…", duration: 30)
         DispatchQueue.global(qos: .userInitiated).async {
             let lines = Self.recognizeText(in: screenshot)
             DispatchQueue.main.async {
+                self.isRecognizingText = false
                 self.copyText(lines)
             }
         }
@@ -247,9 +261,9 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
             self.hintWindow.showBadge("No text found")
             return false
         }
-        NSPasteboard.general.clearContents()
-        let didCopy = NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
-        self.hintWindow.showBadge(didCopy ? "Text copied" : "Couldn't copy text")
+        self.pasteboard.clearContents()
+        let didCopy = self.pasteboard.setString(lines.joined(separator: "\n"), forType: .string)
+        self.hintWindow.showBadge(didCopy ? "Text copied" : "Couldn't copy text. Try again.")
         return didCopy
     }
 
@@ -262,22 +276,34 @@ class HintWindowController:  NSWindowController, NSWindowDelegate, CopyDelegate,
      reads those same images fine, so fall back to it whenever `.accurate` comes up empty.
      */
     static func recognizeText(in image: CGImage) -> [String] {
+        recognizeText(in: image, using: visionRecognizer)
+    }
+
+    /// Tries `.accurate`, then `.fast`, with the given recognizer; tests pass a fake one to check
+    /// the fallback order without depending on Vision's behavior on a particular OS.
+    static func recognizeText(in image: CGImage,
+                              using recognize: (CGImage, VNRequestTextRecognitionLevel) -> [String]) -> [String] {
         for level in [VNRequestTextRecognitionLevel.accurate, .fast] {
-            let request = VNRecognizeTextRequest()
-            request.recognitionLevel = level
-            request.usesLanguageCorrection = true
-            do {
-                try VNImageRequestHandler(cgImage: image).perform([request])
-            } catch {
-                print("Text recognition (\(level == .accurate ? "accurate" : "fast")) failed: \(error)")
-                continue
-            }
-            let lines = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+            let lines = recognize(image, level)
             if !lines.isEmpty {
                 return lines
             }
         }
         return []
+    }
+
+    /// Recognize text with Vision at one recognition level. Errors count as finding nothing.
+    static func visionRecognizer(_ image: CGImage, _ level: VNRequestTextRecognitionLevel) -> [String] {
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = level
+        request.usesLanguageCorrection = true
+        do {
+            try VNImageRequestHandler(cgImage: image).perform([request])
+        } catch {
+            log.error("Text recognition (\(level == .accurate ? "accurate" : "fast", privacy: .public)) failed: \(error, privacy: .public)")
+            return []
+        }
+        return (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
     }
     
     /**
