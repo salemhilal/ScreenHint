@@ -204,6 +204,9 @@ private func requestFromSystem(_ permission: Permission) {
 /// One row per permission: what it's for, and either "Allowed" or a button to get it.
 struct PermissionsList: View {
     @ObservedObject var model: PermissionsModel
+    /// Whether to keep checking. The tour keeps every page in its window, so it turns this off
+    /// while its permissions page isn't showing.
+    var isLive = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -217,10 +220,13 @@ struct PermissionsList: View {
         // Settings, or with tccutil), so keep checking while this is up, granted or not. It's
         // cheap once everything's granted: two quick system calls.
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-            model.refresh()
+            if isLive { model.refresh() }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            model.refresh()
+            if isLive { model.refresh() }
+        }
+        .onChange(of: isLive) {
+            if isLive { model.refresh() }
         }
     }
 }

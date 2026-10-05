@@ -79,7 +79,8 @@ struct OnboardingPermissionsView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom)
 
-                PermissionsList(model: permissions)
+                PermissionsList(model: permissions,
+                                isLive: page.index == OnboardingPage.allCases.firstIndex(of: .permissions))
                     .font(.system(.body))
                     .padding(.vertical)
 
