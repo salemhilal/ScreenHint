@@ -593,6 +593,10 @@ class ScreenHintAppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let window = self.appWindows[kind] {
             NSApp.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
+            // Activation can be refused (macOS 14's cooperative activation), e.g. when a blocked
+            // capture asks for the Permissions window from a global shortcut; bring it forward
+            // regardless, the same way showWindowForView does for a new window.
+            window.orderFrontRegardless()
             return
         }
 

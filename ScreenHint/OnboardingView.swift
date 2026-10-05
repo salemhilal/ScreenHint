@@ -145,7 +145,7 @@ struct OnboardingMakeHintView: View {
                 Button(action: {
                     (NSApp.delegate as? ScreenHintAppDelegate)?.captureHint(nil)
                 }) {
-                    Label("Click here to try it", systemImage: "rectangle.dashed")
+                    Label("Click here to make a Hint", systemImage: "rectangle.dashed")
                 }
                 .controlSize(.large)
             }
@@ -231,8 +231,8 @@ final class DemoVideoPlayerView: NSView {
 
         setAccessibilityElement(true)
         setAccessibilityRole(.button)
-        setAccessibilityLabel("Video: a keyboard shortcut dims the screen, part of the Weather app is selected and becomes a floating hint, the hint is dragged aside, and a double-click closes it.")
-        setAccessibilityHelp("Plays the video again")
+        setAccessibilityLabel("Demo video")
+        setAccessibilityHelp("A keyboard shortcut dims the screen, part of the Weather app is selected and becomes a floating hint, the hint is dragged aside, and a double-click closes it. Press to play it again.")
     }
 
     required init?(coder: NSCoder) {
@@ -283,6 +283,24 @@ final class DemoVideoPlayerView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         togglePlayback()
+    }
+
+    // Keyboard: focusable (only while its page is showing, so Tab can't land on it from another
+    // page), and Space plays or pauses. Return is left to the page's default button.
+    override var acceptsFirstResponder: Bool { isActive }
+
+    override func keyDown(with event: NSEvent) {
+        if event.charactersIgnoringModifiers == " " {
+            togglePlayback()
+        } else {
+            super.keyDown(with: event)
+        }
+    }
+
+    override var focusRingMaskBounds: NSRect { bounds }
+
+    override func drawFocusRingMask() {
+        NSBezierPath(roundedRect: bounds, xRadius: 5, yRadius: 5).fill()
     }
 
     override func accessibilityPerformPress() -> Bool {
@@ -555,6 +573,10 @@ struct OnboardingView: View {
                 }
                 // ...but the controls on each page keep their focus rings.
                 .focusEffectDisabled(false)
+                // The pager keeps every page in the window. Only the page that's showing gets live
+                // controls: otherwise every page's default button answers Return (and "Let's go!"
+                // would close the tour from the first page), and Tab reaches buttons you can't see.
+                .disabled(page.index != OnboardingPage.allCases.firstIndex(of: p))
             }
             .background(.clear)
             // SwiftUIPager makes the page stack focusable on macOS so the arrow keys can flip pages
